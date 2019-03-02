@@ -1,10 +1,15 @@
 from enum import Enum
+import person
 import sys
 import logging
+import pprint
 log = logging.getLogger(__name__)
+import dateutil.parser
+
 # INT_IDX = Enum('START')
 
 
+pp = pprint.PrettyPrinter(indent=4)
 filename='/home/jacques/industria/nand/gedcom/ged/duplessis_utf8.ged'
 
 
@@ -76,6 +81,12 @@ def _person_sub(lines, current_i, current_level):
         if level != current_level:
             break
         level_dict[key] = ' '.join(split_lines[2:])
+        print(key.lower() == 'date')
+        if key.lower() == 'date':  # think about moving this to a place that applies to whole person dict (recursive)
+            print('is date, updating')
+            level_dict[key] = dateutil.parser.parse(level_dict[key])
+        else:
+            print('is not date "{}"'.format(key.lower()))
         print('person_sub: level: {}, i: {}, line: {}'.format(level, i, lines[i]))
         i += 1
     return level_dict, i
@@ -85,7 +96,6 @@ def _person_parser(lines):
     person_dict = {}
     i = 0
     line = lines[i]
-    print(lines)
     while i < len(lines):
         if 'INDI' in line:
             identifier = line.split(' ')[1]
@@ -94,7 +104,7 @@ def _person_parser(lines):
             i += 1
             line = lines[i]
         if '1 NAME' in line:
-            name = line.split(' ')[2:]
+            name = line  # this can be in the big loop
             log.debug('NAME: {}'.format(name))
             person_dict['name'] = {'name': name}
             i += 1
@@ -103,7 +113,8 @@ def _person_parser(lines):
                 local_dict, i = _person_sub(lines, i, level)
                 person_dict['name'].update(local_dict)
                 line = lines[i]
-        if lines[i].startswith('1'):
+        if lines[i].startswith('1') and \
+                '1 CHAN' not in lines[i]:
             local_dict, i = _person_sub(lines, i, lines[i].split(' ')[0])
             print(local_dict)
             person_dict.update(local_dict)
@@ -116,7 +127,11 @@ def _person_parser(lines):
                 local_dict, i = _person_sub(lines, i, lines[i].split(' ')[0])
                 print(local_dict)
                 person_dict[key] = local_dict
+        else:
+            ret_dict, i = person._parse_chan(lines, i)
+            person_dict.update(ret_dict)
     print(person_dict)
+    pp.pprint(person_dict)
     exit(1)
 
 file_parser(filename)
