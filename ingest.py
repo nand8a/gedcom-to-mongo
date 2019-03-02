@@ -84,8 +84,10 @@ def _person_sub(lines, current_i, current_level):
         print(key.lower() == 'date')
         if key.lower() == 'date':  # think about moving this to a place that applies to whole person dict (recursive)
             print('is date, updating')
-            level_dict[key] = dateutil.parser.parse(level_dict[key])
-        else:
+            try:
+                level_dict[key] = dateutil.parser.parse(level_dict[key])
+            except ValueError as e:
+                level_dict[key] = {'raw': level_dict[key], 'error': e}
             print('is not date "{}"'.format(key.lower()))
         print('person_sub: level: {}, i: {}, line: {}'.format(level, i, lines[i]))
         i += 1
@@ -123,15 +125,16 @@ def _person_parser(lines):
             print('----')
             print(person_dict)
             print(person_dict[key])
-            while lines[i].split(' ')[0] != '1':
+            while i < len(lines) and (lines[i].split(' ')[0] != '1'):
                 local_dict, i = _person_sub(lines, i, lines[i].split(' ')[0])
-                print(local_dict)
+                print(' after while {}'.format(local_dict))
                 person_dict[key] = local_dict
+                print(' ----i:{}'.format(i))
         else:
             ret_dict, i = person._parse_chan(lines, i)
             person_dict.update(ret_dict)
-    print(person_dict)
+    print(i)
     pp.pprint(person_dict)
-    exit(1)
+
 
 file_parser(filename)
