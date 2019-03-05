@@ -4,7 +4,7 @@ log = logging.getLogger(__name__)
 
 
 valid_formats = ['%Y', "%Y-%M-%D", "%Y%M%D",
-                 "%d %b %Y", "%d %b %Y %H:%M:%S"]
+                 "%d %b %Y", "%d %b %Y %H:%M:%S", "%b %Y %H:%M:%S"]
 
 
 def get_date_dictionary(key: str, date: str):

@@ -13,7 +13,7 @@ MONGO_PORT = 27017
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('geocoder go')
+    parser = argparse.ArgumentParser('main')
     parser.add_argument('-i', '--ingest', required=False, help="provide a fully qualified gedcom file")
     parser.add_argument('-d', '--db', required=True, help="provide an output database name")
     parser.add_argument('--ip', default="10.22.14.2", help="provide an ip address for db")

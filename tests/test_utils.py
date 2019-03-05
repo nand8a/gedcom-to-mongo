@@ -27,6 +27,10 @@ class TestDateDictionary(unittest.TestCase):
         date_alpha = {key: datetime(date_in, 1, 1, 0, 0)}
         self.assertEqual(date_alpha, utils.get_date_dictionary(key, str(date_in)))
 
+        date_in = 'Feb 2017 19:43:36'
+        date_alpha = {key: datetime(2017, 2, 1, 19, 43, 36)}
+        self.assertEqual(date_alpha, utils.get_date_dictionary(key, date_in))
+
     def test_date_negative(self):
         date_in = 'not a real date'
         key = 'my_date'

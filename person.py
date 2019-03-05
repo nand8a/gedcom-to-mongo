@@ -5,6 +5,8 @@ import logging
 import pprint
 log = logging.getLogger(__name__)
 import dateutil.parser
+import utils
+
 pp = pprint.PrettyPrinter(indent=4)
 
 def _parse_chan(lines, i):
@@ -39,13 +41,13 @@ def _parse_chan(lines, i):
             time = ''
         else:
             time = lines[i].lstrip('3 TIME ').replace('\n', '')
-        try:
-            date_obj = dateutil.parser.parse("{} {}".format(date, time))
-        except ValueError as e:
-            print('failed to convert "{} {}"'.format(date, time))
-            date_obj = {'raw': '{} {}'.format(date, time), 'error': e}
         i += 1
-        return {key: date_obj}, i
+        ret = utils.get_date_dictionary(key, "{} {}".format(date, time))
+        if ret:
+            return ret, i
+        else:
+            log.error('could not parse date: {} time: {}'.format(date, time))
+            return {}, i
 
 
 def _person_sub(lines, current_i, current_level):
@@ -77,10 +79,7 @@ def _person_sub(lines, current_i, current_level):
         level_dict[key] = ' '.join(split_lines[2:])
         print(key.lower() == 'date')
         if key.lower() == 'date':  # think about moving this to a place that applies to whole person dict (recursive)
-            try:
-                level_dict[key] = dateutil.parser.parse(level_dict[key])
-            except ValueError as e:
-                level_dict[key] = {'raw': level_dict[key], 'error': e}
+            level_dict.update(utils.get_date_dictionary(key, level_dict[key]))
         i += 1
     return level_dict, i
 
