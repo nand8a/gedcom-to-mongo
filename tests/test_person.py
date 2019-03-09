@@ -41,7 +41,8 @@ class TestPerson(unittest.TestCase):
         # test that works correctly after the BIRT key
         i = 6
         local_dict, res_i = person._person_sub(self.lines, i, self.lines[i].split(' ')[0])
-        self.assertEqual({'DATE'.lower(): '1693', 'PLAC'.lower(): 'Ierland'}, local_dict)
+        self.assertEqual({'DATE'.lower(): datetime(1693, 1, 1, 0, 0),
+                          'PLAC'.lower(): 'Ierland'}, local_dict)
         self.assertEqual(res_i, 8)
 
     def test_person_sub_level_1(self):
@@ -56,3 +57,16 @@ class TestPerson(unittest.TestCase):
         self.assertEqual({'BIRT'.lower(): None}, local_dict)
         self.assertEqual(res_i, i+1)
 
+    def test_person_name(self):
+        i = 1
+        expect = {'name': 'Judith /du Plessis/', 'surn': 'du Plessis', 'givn': 'Judith'}
+        local_dict, res_1 = person._person_name(self.lines, i)
+        self.assertEqual(expect, local_dict)
+
+
+class TestPersonName(unittest.TestCase):
+
+    def test_person_strip_key(self):
+        lines = ['1 NAME Anna /du Toit/']
+        output, _ = person._person_name(lines, 0)
+        self.assertEqual({'name': 'Anna /du Toit/'}, output)

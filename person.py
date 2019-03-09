@@ -2,6 +2,7 @@ import logging
 import pprint
 log = logging.getLogger(__name__)
 import utils
+import re
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -81,29 +82,35 @@ def _person_sub(lines, current_i, current_level):
     return level_dict, i
 
 
+def _person_name(lines, i):
+    log.debug('name before strip {}'.format(lines[i]))
+    name = re.sub('^1 NAME ', '', lines[i])
+    log.debug('NAME: {}'.format(name))
+    local_dict = {'name': name}
+    i += 1
+    while i < len(lines) and lines[i].split(' ')[0] != '1':
+        level = lines[i].split(' ')[0]
+        person_sub_dict, i = _person_sub(lines, i, level)
+        local_dict.update(person_sub_dict)
+    return local_dict, i
+
+
 def parser(lines):
     person_dict = {}
     i = 0
-    line = lines[i]
     while i < len(lines):
-        if 'INDI' in line:
-            identifier = line.split(' ')[1]
+        if 'INDI' in lines[i]:
+            identifier = lines[i].split(' ')[1]
+            if identifier == '@I10@':
+                exit(0)
             log.debug('INDI: {}'.format(identifier))
             person_dict['_id'] = identifier
             i += 1
-            line = lines[i]
-        if '1 NAME' in line:
-            name = line  # this can be in the big loop
-            log.debug('NAME: {}'.format(name))
-            person_dict['name'] = {'name': name}
-            i += 1
-            while i < len(lines) and lines[i].split(' ')[0] != '1':
-                level = line.split(' ')[0]
-                local_dict, i = _person_sub(lines, i, level)
-                person_dict['name'].update(local_dict)
-                line = lines[i]
+        if '1 NAME' in lines[i]:
+            person_dict['name'], i = _person_name(lines, i)
+            log.debug('after name insertion: {}'.format(person_dict))
         if lines[i].startswith('1') and \
-                '1 CHAN' not in lines[i]:
+                '1 CHAN' not in lines[i]:  # add exclusion for NAME here in case of i error
             local_dict, i = _person_sub(lines, i, lines[i].split(' ')[0])
             person_dict.update(local_dict)
             key = list(local_dict.keys())[0]
