@@ -40,3 +40,38 @@ def get_date(date: str):
         except Exception as e:
             pass
     return None
+
+
+
+def ged_sub_structure(lines, current_i, current_level):
+    """
+    :param lines: list of lines
+    :param current_i: the current index into the list
+    :param current_level: the current 'level' (where level in [2,3,4,...]
+    :return: a dictionary where all level elements are nested at the same depth
+    """
+    i = current_i
+    level_dict = {}
+    # we increment only after the first run of the loop
+    log.debug('params: current_i: {}, current_level: {}'.format(current_i, current_level))
+    log.debug('called with line: {}'.format(lines[i]))
+    while i < len(lines):
+        split_lines = lines[i].rstrip('\n').split(' ')
+        level, key = split_lines[0], split_lines[1].lower()
+        if current_level == '1':
+            # special case, return either root {key: None} or {key: value}
+            value = None
+            try:
+                value = split_lines[2]
+            except Exception as e:
+                pass
+            i += 1
+            return {key: value}, i
+        if level != current_level:
+            break
+        level_dict[key] = ' '.join(split_lines[2:])
+        print(key.lower() == 'date')
+        if key.lower() == 'date':
+            level_dict.update(get_date_dictionary(key, level_dict[key]))
+        i += 1
+    return level_dict, i

@@ -1,6 +1,7 @@
 import unittest
 import person
 from datetime import datetime
+import utils
 
 
 class TestPerson(unittest.TestCase):
@@ -40,20 +41,21 @@ class TestPerson(unittest.TestCase):
     def test_person_sub(self):
         # test that works correctly after the BIRT key
         i = 6
-        local_dict, res_i = person._person_sub(self.lines, i, self.lines[i].split(' ')[0])
+        local_dict, res_i = utils.ged_sub_structure(self.lines, i, self.lines[i].split(' ')[0])
         self.assertEqual({'DATE'.lower(): datetime(1693, 1, 1, 0, 0),
                           'PLAC'.lower(): 'Ierland'}, local_dict)
         self.assertEqual(res_i, 8)
 
+    # todo fix this
     def test_person_sub_level_1(self):
         # assuming '1 KEY VALUE' returns as ({KEY: VALUE}, int), whilst '1 KEY' returns as ({KEY: None})
         i = 9
-        local_dict, res_i = person._person_sub(self.lines, i, self.lines[i].split(' ')[0])
+        local_dict, res_i = utils.ged_sub_structure(self.lines, i, self.lines[i].split(' ')[0])
         self.assertEqual({'fams': '@F5@'}, local_dict)
         self.assertEqual(res_i, i+1)
 
         i = 5
-        local_dict, res_i = person._person_sub(self.lines, i, self.lines[i].split(' ')[0])
+        local_dict, res_i = utils.ged_sub_structure(self.lines, i, self.lines[i].split(' ')[0])
         self.assertEqual({'BIRT'.lower(): None}, local_dict)
         self.assertEqual(res_i, i+1)
 
