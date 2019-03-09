@@ -1,20 +1,19 @@
 from enum import Enum
 import person
-import sys
 import logging
 import pprint
+from dbinterface import Db
 log = logging.getLogger(__name__)
-import dateutil.parser
 
 # INT_IDX = Enum('START')
 
 
 pp = pprint.PrettyPrinter(indent=4)
-FILENAME='/home/jacques/industria/nand/gedcom/ged/duplessis_utf8.ged'
+FILENAME = '/home/jacques/industria/nand/gedcom/ged/duplessis_utf8.ged'
+
 
 
 def file_parser(fqfn):
-    count = 0
     reading = True
     with open(fqfn, 'r',  encoding='utf-8-sig') as f:
         while reading:
@@ -44,7 +43,8 @@ def _person_reader(file_handler, line):
             # must deal sequentially due to max recursion depth
             file_handler.seek(last_pos)
             log.debug('full person record passed to parser is: {}'.format(lines))
-            person.parser(lines)
+            log.info('Connection retrieved : {}'.format(Db().get_connect()))
+            Db().get_connect().coll.insert_one(person.parser(lines))
             return file_handler
         elif int(line[0]) > 0:
             log.debug('appending... {}'.format(line))

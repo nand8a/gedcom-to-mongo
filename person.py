@@ -1,13 +1,10 @@
-import dateutil.parser
-
-import person
 import logging
 import pprint
 log = logging.getLogger(__name__)
-import dateutil.parser
 import utils
 
 pp = pprint.PrettyPrinter(indent=4)
+
 
 def _parse_chan(lines, i):
     """
@@ -114,8 +111,8 @@ def parser(lines):
                 local_dict, i = _person_sub(lines, i, lines[i].split(' ')[0])
                 person_dict[key] = local_dict
         else:
-            ret_dict, i = person._parse_chan(lines, i)
+            ret_dict, i = _parse_chan(lines, i)
             person_dict.update(ret_dict)
-    print(i)
-    pp.pprint(person_dict)
+    log.debug(pp.pprint(person_dict))
+    return person_dict
 

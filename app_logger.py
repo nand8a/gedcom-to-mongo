@@ -6,7 +6,7 @@ def init(log_file=None, log_level=logging.INFO):
     """
     get a logger that prints to a log_file, and to stdout/terminal. Is root logger so returns nothing
     :param log_file:
-    :param log level for logger
+    :param log_level for logger
     """
     if not log_file:
         log_file = build.__name__ + '.log'
