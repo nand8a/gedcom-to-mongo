@@ -41,51 +41,51 @@ class Db(object):
             m_db = self.mc[db]
             if drop:
                 m_db.drop_collection(coll)
-            self.coll = self.mc[db][coll]
-            self.index_field = index_field
+            coll = self.mc[db][coll]
+            index_field = index_field
             if index_field:
                 log.info('ensure index on {}'.format(index_field))
-                self.coll.ensure_index(index_field, unique=True)
+                coll.ensure_index(index_field, unique=True)
             else:
                 log.info('not creating an index on the collection')
         except Exception as e:
             log.error('Unable to access db {} and collection {}: {}'.format(db, coll, e))
             raise
-        return self.coll
+        return coll
 
-    def has(self, key):
-        if not self.coll:
+    def has(self, coll, key):
+        if not coll:
             log.error('please attach a collection first')
             raise ValueError('no collection active')
-        if len(list(self.coll.find({self.index_field: key}))) > 0:
+        if len(list(coll.find({self.index_field: key}))) > 0:
             return True
         else:
             return False
 
-    def get(self, key):
+    def get(self, coll, key):
         """
         get entire record in db
         :param key:
         :return:
         """
-        ans = list(self.coll.find({self.index_field: key}))
+        ans = list(coll.find({self.index_field: key}))
         if len(ans) != 1:
             return None
         else:
             return ans[0]
 
-    def update(self, index_field, update_dict):
+    def update(self, coll, index_field, update_dict):
         """
         insert/upsert a single record
         :param record:
         :return:
         """
-        if not self.coll:
+        if not coll:
             log.error('please attach to a collection first')
             raise ValueError('no collection active')
         log.info('upserting {}'.format(index_field))
         log.debug('inserting/overwriting {}'.format(update_dict))
-        self.coll.find_one_and_update(
+        coll.find_one_and_update(
             {self.index_field: index_field},
             {"$set": update_dict},
             upsert=True
