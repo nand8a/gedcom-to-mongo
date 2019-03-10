@@ -2,7 +2,7 @@ import logging
 import app_logger
 import dbinterface as dbi
 import ingest
-#from bson.objectid import ObjectId
+import embedding_person as tr
 
 import argparse
 
@@ -18,6 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--db', required=True, help="provide an output database name")
     parser.add_argument('--host', default="10.22.14.2", help="provide an ip address for db")
     parser.add_argument('-p', '--port', default=27017, help="provide integer port for db")
+    parser.add_argument('-t', '--transformer', help='apply transformation')
     # parser.add_argument('-c', '--coll', required=True, help="collection name")
 
     args = parser.parse_args()
@@ -40,8 +41,9 @@ if __name__ == '__main__':
     if args.ingest:
         log.info('ingesting data: processing {} and storing to {}'.format(args.ingest, args.db))
         ingest.file_parser(args.ingest)
-    else:
-        raise NotImplementedError()
+    elif args.transformer:
+        log.info('applying transformation pipelines')
+        tr.processor()
 
 
 

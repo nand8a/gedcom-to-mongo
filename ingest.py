@@ -1,4 +1,3 @@
-from enum import Enum
 import person
 import family
 import logging
@@ -7,15 +6,16 @@ from dbinterface import Db
 import re
 log = logging.getLogger(__name__)
 
-# INT_IDX = Enum('START')
-
-
 pp = pprint.PrettyPrinter(indent=4)
 
 
-
 def file_parser(fqfn):
-    counter = 0
+    """
+    parse a .ged formatted file by reading it line
+    for line and interpreting the leftmost code and keys.
+    :param fqfn: a fully qualified filename
+    :return:
+    """
     with open(fqfn, 'r',  encoding='utf-8-sig') as f:
         line = f.readline()
         while line != "":
@@ -26,11 +26,20 @@ def file_parser(fqfn):
                     # termination symbol
                     log.info('file parsing complete\nStats:')
                 f = _dict_builder(f, line)
-                #here. it is skipping the last one cos we are not matching to 0
             line = f.readline()
 
 
 def _flush_data(data: list, fam_flg=False, person_flg=False):
+    """
+    Depending on whether or not these data in <data> are family or
+    person oriented, persist them to the relevant database --- this
+    will likely move to an OOP implementation where the objects write
+    themselves (this is a still the prototype TODO)
+    :param data: a list lines
+    :param fam_flg: boolean which is true if data is mapped to family
+    :param person_flg: true if data is mapped to person
+    :return:
+    """
     if fam_flg:
         log.debug('persisting family dictionary')
         t_dict = family.parser(data)
@@ -38,9 +47,18 @@ def _flush_data(data: list, fam_flg=False, person_flg=False):
     elif person_flg:
         t_dict = person.parser(data)
         Db().get_connect().collection('gedcom', 'person_test').insert_one(t_dict)
+    else:
+        raise ValueError('this function only caters for family and person flags')
 
 
 def _dict_builder(file_handler, line):
+    """
+    continue incrementing over the file_handler and extract the
+    components related to FAM and INDI (only implemented thus far)
+    :param file_handler: the file handler that the
+    :param line: the last line pulled out of the file
+    :return:
+    """
     log.debug('dict_builder called with {}'.format(line))
     fam_flg = False
     person_flg = False
