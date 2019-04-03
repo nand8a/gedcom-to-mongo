@@ -2,9 +2,20 @@
 
 Ingest a file in GEDCOM format into MongoDB.
 
+> [Summary](#summary)
+> 
+> [Execution](#execution)
+>
+> [Testing](#testing)
+>
+> [Conversion Conventions](#conversion-conventions)
+> 
+> [Example MongoDB Queries](#example-mongodb-queries)
+>
+> [Integrating with R](#integrating-with-r)
 
 ## Summary
-Embed a lineage-linked _Genealogical Data Communication  
+Embed a lineage-linked _Genealogical Data Communication_ 
 ([GEDCOM](https://en.wikipedia.org/wiki/GEDCOM))
 data model, which is structured around individuals and families, 
 into a _MongoDB_ database.
@@ -48,26 +59,91 @@ An example of the GEDCOM file format is:
 The ingestion of this file results in the following MongoDB structure:
 
 ```json
-some: { json: here }
+/* 1 */
+{
+    "_id" : "@I1@",
+    "name" : {
+        "name" : "John /Smith/"
+    },
+    "sex" : "M",
+    "fams" : "@F1@"
+}
+
+/* 2 */
+{
+    "_id" : "@I2@",
+    "name" : {
+        "name" : "Elizabeth /Stansfield/"
+    },
+    "sex" : "F",
+    "fams" : "@F1@"
+}
+
+/* 3 */
+{
+    "_id" : "@I3@",
+    "name" : {
+        "name" : "James /Smith/"
+    },
+    "sex" : "M",
+    "famc" : "@F1@"
+}
 ```
 
-## Conventions
- * Keys in the GEDCOM file (e.g. `FAMS`, `NAME`, ...) are retained as keys in MongoDB,
-as far as possible. The instances where this is not the case, are:
-    -  sublist  
+
+## Execution
+
+  * Dependencies are contained in `requirements.txt`:
+      
+    ```bash
+    $pip install -r requirements.txt
+    ```
+  
+  * Ingesting a data file, say `data/wiki.ged`, may be done as follows:
+  
+    ```bash
+    $python main.py -i data/wiki.ged
+    ```
+  * Usage information may be gathered from the main runner via:
+  
+    ```bash
+    $python main.py -h
+    ```
+    
+## Testing
+
+  * Unittests may be run via: 
   ```
-  1 NAME Judith /du Plessis/'
-  2 SURN du Plessis'
-  2 GIVN Judith' 
+    python -m unittest tests
+  ```
+  * Two sample files are provided in `data/`
+  
+  
+
+## Conversion Conventions
+ * Keys in the GEDCOM file (e.g. `FAMS`, `NAME`, ...) are retained as keys in MongoDB,
+as far as possible. The instances where this is not the case, is:
+    - record change `DATE` and `TIME` are concatenated to form `chan_date`, an ISO datetime:  
+  ```
+    1 CHAN
+    2 DATE 14 Jun 2020
+    3 TIME 18:24:09
+    
+    >> chan_date: '2020-06-14 18:24:09.000Z'
   ```
 
  * An individual record (e.g. `@I2@`) is currently used as the document 
  `_id` in MongoDB.
  
  * An embedded database structure is sought, but a secondary family
-   database has been retained until that structure is settled on. 
-   It is possible to join between the `individuals` database and this
-   `family` database.
+   database has been retained until that structure is settled on. These two 
+   databases are the
+     - `person`, and
+     - `family` databases.
+      
+   It is possible to join between the them in MongoDB.
+   
+   
 
 
 ## Example MongoDB Queries
