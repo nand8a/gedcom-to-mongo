@@ -2,6 +2,7 @@ import logging
 import app_logger
 import dbinterface as dbi
 import ingest
+import settings
 import embedding_person as tr
 
 import argparse
@@ -15,7 +16,7 @@ MONGO_PORT = 27017
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('main')
     parser.add_argument('-i', '--ingest', required=False, help="provide a fully qualified gedcom file")
-    parser.add_argument('-d', '--db', required=True, help="provide an output database name")
+    # parser.add_argument('-d', '--db', required=True, help="provide an output database name")
     parser.add_argument('--host', default="10.22.14.2", help="provide an ip address for db")
     parser.add_argument('-p', '--port', default=27017, help="provide integer port for db")
     parser.add_argument('-t', '--transformer', help='apply transformation')
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     #     log.warning('collection {} does not exist in {}'.format(args.coll, args.db))
 
     if args.ingest:
-        log.info('ingesting data: processing {} and storing to {}'.format(args.ingest, args.db))
+        log.info('ingesting data: processing {} and storing to {}'.format(args.ingest, settings.sink_db))
         ingest.file_parser(args.ingest)
     elif args.transformer:
         log.info('applying transformation pipelines')
