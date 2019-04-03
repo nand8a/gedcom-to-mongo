@@ -2,6 +2,7 @@ import logging
 import pprint
 
 from dbinterface import Db
+import settings
 
 log = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ def processor():
     we process the family section without writing it to a db first).s
     :return:
     """
-    family_coll = Db().get_connect().collection('gedcom', 'fam_test')
-    person_coll = Db().get_connect().collection('gedcom', 'person_test')
+    family_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_family)
+    person_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_person)
     # get a mongo cursor
     cursor = family_coll.find(
         {'processors': {'$not': {'$elemMatch': {'$regex': __proc_name__}}}}
@@ -66,9 +67,11 @@ def _update_children(person_coll, parents: list, children: list):
 
 
 def _get_spouses(parents: list, current_parent: str, current_record: dict):
-    """given a list of parents, of which current_parent is a member,
+    """
+    given a list of parents, of which current_parent is a member,
     extract the spouses from current_record and return the list of the
-    spouses only"""
+    spouses only
+    """
     # we are assuming that there are two parents in each case
     if len(parents) > 2:
         raise NotImplementedError('We are not catering for more than two parents in a single family')

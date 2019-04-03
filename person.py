@@ -21,7 +21,7 @@ def _parse_chan(lines, i):
     {'raw': <raw string date>: 'error': <parse error>}
     """
     if '1 CHAN' not in lines[i]:
-        return {}
+        return {}, i
     else:
         if '1 chan' not in lines[i].lower():
             Exception('parse error: expected "1 chan", got "{}"'.format(lines[i].lower()))
@@ -49,17 +49,26 @@ def _parse_chan(lines, i):
             return {}, i
 
 
-def _person_conc(lines, i):
-    if lines[i].startswith('1 NOTES'):
+def _person_note(lines, i):
+    """
+    helper function to pull out the commentary
+    todo: this needs to be cleaned up as far as these awful
+    string keys are concerned - move them to enum or other class
+    :param lines:
+    :param i:
+    :return:
+    """
+    if lines[i].startswith('1 NOTE'):
         ret = re.sub('^1 NOTE ', '', lines[i]) + ' '
         i += 1
-        while lines[i].startswith('1 CONC'):
-            ret += re.sub('^1 CONC ', '', lines[i]) + ' '
+        while lines[i].startswith('2 CONC'):
+            ret += re.sub('^2 CONC ', '', lines[i]) + ' '
             i += 1
+        # remove space introduced to account for continuations
         ret = ret[:-1]
-        return ret
+        return ret, i
     else:
-        return []
+        return [], i
 
 
 def _person_name(lines, i):
@@ -87,8 +96,9 @@ def parser(lines):
         if '1 NAME' in lines[i]:
             person_dict['name'], i = _person_name(lines, i)
             log.debug('after name insertion: {}'.format(person_dict))
-        if '1 CONC ' in lines[i]:
-            person_dict['conc'] = _person_conc(lines, i)
+        if '1 NOTE ' in lines[i]:  # todo: not DRY - duplicating string check
+            person_dict['note'], i = _person_note(lines, i)
+            # todo: get rid of this awful index scheme
         if lines[i].startswith('1') and \
                 '1 CHAN' not in lines[i]:  # add exclusion for NAME here in case of i error
             local_dict, i = utils.ged_sub_structure(lines, i, lines[i].split(' ')[0])

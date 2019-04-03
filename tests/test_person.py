@@ -27,14 +27,14 @@ class TestPerson(unittest.TestCase):
             '1 CHAN',   #13
             '2 DATE 13 Sep 2016',  #14
             '3 TIME 20:14:25',  #15
-            '1 CONC {}'.format(cls.conc_1),  #16
-            '1 CONC {}'.format(cls.conc_2),
+            '1 NOTE {}'.format(cls.conc_1),  #16
+            '2 CONC {}'.format(cls.conc_2),
             '0 @I4@ INDI'
         ]
 
-    def test_person_conc(self):
+    def test_person_note(self):
         i = 16
-        ret_string = person._person_conc(self.lines, i)
+        ret_string, _ = person._person_note(self.lines, i)
         self.assertEqual(ret_string, '{} {}'.format(self.conc_1, self.conc_2))
 
 
