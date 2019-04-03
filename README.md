@@ -261,7 +261,7 @@ db.coll.aggregate(
  * R packages requirements include:
    * `mongolite`
    
- * todo: an R notebook will be provided (e.g. [here](file://queries_r.nb.html))
+ * todo: an R notebook will be provided (e.g. [here](queries_r.nb.html))
  * Connecting to a MongoDB instance with database `gedcom`, collections `person` and `family`,
  and located on a host with IP `10.22.14.2` and port `27017`
  
