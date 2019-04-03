@@ -66,9 +66,11 @@ def _update_children(person_coll, parents: list, children: list):
 
 
 def _get_spouses(parents: list, current_parent: str, current_record: dict):
-    """given a list of parents, of which current_parent is a member,
+    """
+    given a list of parents, of which current_parent is a member,
     extract the spouses from current_record and return the list of the
-    spouses only"""
+    spouses only
+    """
     # we are assuming that there are two parents in each case
     if len(parents) > 2:
         raise NotImplementedError('We are not catering for more than two parents in a single family')
