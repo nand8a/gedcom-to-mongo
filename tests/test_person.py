@@ -27,7 +27,7 @@ class TestPerson(unittest.TestCase):
             '1 CHAN',   #13
             '2 DATE 13 Sep 2016',  #14
             '3 TIME 20:14:25',  #15
-            '1 CONC {}'.format(cls.conc_1),  #16
+            '1 NOTE {}'.format(cls.conc_1),  #16
             '1 CONC {}'.format(cls.conc_2),
             '0 @I4@ INDI'
         ]

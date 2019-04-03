@@ -50,7 +50,15 @@ def _parse_chan(lines, i):
 
 
 def _person_conc(lines, i):
-    if lines[i].startswith('1 NOTES'):
+    """
+    helper function to pull out the commentary
+    todo: this needs to be cleaned up as far as these awful
+    string keys are concerned - move them to enum or other class
+    :param lines:
+    :param i:
+    :return:
+    """
+    if lines[i].startswith('1 NOTE'):
         ret = re.sub('^1 NOTE ', '', lines[i]) + ' '
         i += 1
         while lines[i].startswith('1 CONC'):
