@@ -6,7 +6,7 @@ import embedding_person as tr
 
 import argparse
 
-log = app_logger.init(log_level=logging.DEBUG)
+log = app_logger.init(log_level=logging.INFO)
 
 DATA_FOLDER='/home/jacques/industria/nand/nand-gedcom-to-mongo/data'
 MONGO_PORT = 27017

@@ -47,8 +47,8 @@ def processor():
             {"$set": {'processors': [__proc_name__]}}, upsert=True)
 
         record = cursor.next()
-        if count == 10:
-            break
+#        if count == 10:
+#            break
     log.info('processed {} records with {} processor'.format(count, __proc_name__))
 
 
@@ -65,6 +65,20 @@ def _update_children(person_coll, parents: list, children: list):
             {"$set": {'parents': parents}}, upsert=True)
 
 
+def _get_spouses(parents: list, current_parent: str, current_record: dict):
+    """given a list of parents, of which current_parent is a member,
+    extract the spouses from current_record and return the list of the
+    spouses only"""
+    # we are assuming that there are two parents in each case
+    if len(parents) > 2:
+        raise NotImplementedError('We are not catering for more than two parents in a single family')
+    spouses = list(set(parents) - set([current_parent]))
+    log.debug('spouses list {}'.format(spouses))
+    if 'spouses' in current_record:
+        spouses += current_record['spouses']
+    return spouses
+
+
 def _update_parents(parents: list, nr_of_children, person_coll):
     for parent in parents:
         parent_record = person_coll.find_one({'_id': parent},
@@ -77,11 +91,8 @@ def _update_parents(parents: list, nr_of_children, person_coll):
         log.debug('{}\'s marriage counter is {}. updating in mongo'.format(
             parent, married_count))
 
-        spouses = list(set(parents) - set(list(parent)))
-        log.debug('spouses list {}'.format(spouses))
-        if 'spouses' in parent_record:
-            spouses += parent_record['spouses']
-            log.debug('new spouses {}'.format(spouses))
+        spouses = _get_spouses(parents, parent, parent_record)
+        log.debug('new spouses {}'.format(spouses))
         log.debug('{}\'s spouse list is {}'.format(parent, spouses))
 
         children_count = nr_of_children

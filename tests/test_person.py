@@ -8,6 +8,8 @@ class TestPerson(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.conc_1 = 'There is plenty of commentary here'
+        cls.conc_2 = 'and more here.....'
         cls.lines = [
             '0 @I3@ INDI',  # 0
             '1 NAME Judith /du Plessis/',  # 1
@@ -23,15 +25,21 @@ class TestPerson(unittest.TestCase):
             '1 FAMS @F6@',  #11
             '1 FAMC @F7@',  #12
             '1 CHAN',   #13
-            '2 DATE 13 Sep 2016',
-            '3 TIME 20:14:25',
+            '2 DATE 13 Sep 2016',  #14
+            '3 TIME 20:14:25',  #15
+            '1 CONC {}'.format(cls.conc_1),  #16
+            '1 CONC {}'.format(cls.conc_2),
             '0 @I4@ INDI'
         ]
 
+    def test_person_conc(self):
+        i = 16
+        ret_string = person._person_conc(self.lines, i)
+        self.assertEqual(ret_string, '{} {}'.format(self.conc_1, self.conc_2))
+
+
     def test_person_chan(self):
         i = 13
-        print('test_person')
-        print(self.lines)
         local_dict, res_i = person._parse_chan(self.lines, i)
         self.assertEqual({'chan_date':
                           datetime.strptime('13 Sep 2016 20:14:25', '%d %b %Y %H:%M:%S')

@@ -32,12 +32,13 @@ def _parse_chan(lines, i):
             print('warning: expected a date first... pluggin')
             date = ''
         else:
-            date = lines[i].lstrip('2 DATE').replace('\n', '')
+            date = lines[i].lstrip('2 DATE ').replace('\n', '')
         i += 1
         if '3 time' not in lines[i].lower():
             print('warning: expected a time, but none')
             time = ''
         else:
+            # todo this lstrip chap is dangerous
             time = lines[i].lstrip('3 TIME ').replace('\n', '')
         i += 1
         ret = utils.get_date_dictionary(key, "{} {}".format(date, time))
@@ -46,6 +47,19 @@ def _parse_chan(lines, i):
         else:
             log.error('could not parse date: {} time: {}'.format(date, time))
             return {}, i
+
+
+def _person_conc(lines, i):
+    if lines[i].startswith('1 NOTES'):
+        ret = re.sub('^1 NOTE ', '', lines[i]) + ' '
+        i += 1
+        while lines[i].startswith('1 CONC'):
+            ret += re.sub('^1 CONC ', '', lines[i]) + ' '
+            i += 1
+        ret = ret[:-1]
+        return ret
+    else:
+        return []
 
 
 def _person_name(lines, i):
@@ -73,6 +87,8 @@ def parser(lines):
         if '1 NAME' in lines[i]:
             person_dict['name'], i = _person_name(lines, i)
             log.debug('after name insertion: {}'.format(person_dict))
+        if '1 CONC ' in lines[i]:
+            person_dict['conc'] = _person_conc(lines, i)
         if lines[i].startswith('1') and \
                 '1 CHAN' not in lines[i]:  # add exclusion for NAME here in case of i error
             local_dict, i = utils.ged_sub_structure(lines, i, lines[i].split(' ')[0])
