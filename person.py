@@ -21,7 +21,8 @@ def _parse_chan(lines, i):
     {'raw': <raw string date>: 'error': <parse error>}
     """
     if '1 CHAN' not in lines[i]:
-        return {}, i
+        i += 1
+        return {}, i  # todo deal with this outside of chan which is now acting as a catch-all - superbad.
     else:
         if '1 chan' not in lines[i].lower():
             Exception('parse error: expected "1 chan", got "{}"'.format(lines[i].lower()))
@@ -40,6 +41,7 @@ def _parse_chan(lines, i):
         else:
             # todo this lstrip chap is dangerous
             time = lines[i].lstrip('3 TIME ').replace('\n', '')
+        # todo there is surely a bug here
         i += 1
         ret = utils.get_date_dictionary(key, "{} {}".format(date, time))
         if ret:

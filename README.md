@@ -58,7 +58,7 @@ An example of the GEDCOM file format is:
 
 The ingestion of this file results in the following MongoDB structure:
 
-```json
+```
 /* 1 */
 {
     "_id" : "@I1@",
@@ -144,8 +144,15 @@ as far as possible. The instances where this is not the case, is:
      - `family` databases.
       
    It is possible to join between the them in MongoDB.
+ * Transformation are always repeatable and embedded in the data flow. There are currently the 
+ following transformations applied to the incoming data:
+    * `embed_p1`: 
+        * [`parents`] insert the parents of each individual in a list (there can be more than two parents)
+        * [`married_count`] count the number of times an individual has been married
+        * [`spouses`] create a list of spouses that an individual had
+        * [`children_count`] provide a counter of the number of children an individual had
    
-   
+   Each attribute 
 
 
 ## Example MongoDB Queries
