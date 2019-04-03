@@ -4,7 +4,9 @@ import logging
 import pprint
 from dbinterface import Db
 import re
+import settings
 log = logging.getLogger(__name__)
+
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -43,10 +45,10 @@ def _flush_data(data: list, fam_flg=False, person_flg=False):
     if fam_flg:
         log.debug('persisting family dictionary')
         t_dict = family.parser(data)
-        Db().get_connect().collection('gedcom', 'fam_test').insert_one(t_dict)
+        Db().get_connect().collection(settings.sink_db, settings.sink_tbl_family).insert_one(t_dict)
     elif person_flg:
         t_dict = person.parser(data)
-        Db().get_connect().collection('gedcom', 'person_test').insert_one(t_dict)
+        Db().get_connect().collection(settings.sink_db, settings.sink_tbl_person).insert_one(t_dict)
     else:
         raise ValueError('this function only caters for family and person flags')
 

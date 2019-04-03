@@ -2,6 +2,7 @@ import logging
 import pprint
 
 from dbinterface import Db
+import settings
 
 log = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ def processor():
     we process the family section without writing it to a db first).s
     :return:
     """
-    family_coll = Db().get_connect().collection('gedcom', 'fam_test')
-    person_coll = Db().get_connect().collection('gedcom', 'person_test')
+    family_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_family)
+    person_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_person)
     # get a mongo cursor
     cursor = family_coll.find(
         {'processors': {'$not': {'$elemMatch': {'$regex': __proc_name__}}}}
