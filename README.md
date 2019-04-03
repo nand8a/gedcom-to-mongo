@@ -123,7 +123,8 @@ The ingestion of this file results in the following MongoDB structure:
 ## Conversion Conventions
  * Keys in the GEDCOM file (e.g. `FAMS`, `NAME`, ...) are retained as keys in MongoDB,
 as far as possible. The instances where this is not the case, is:
-    - record change `DATE` and `TIME` are concatenated to form `chan_date`, an ISO datetime:  
+    - when an individuals record is edited, a change record is added. In 
+    this instance, the `DATE` and `TIME` are concatenated to form `chan_date`, an ISO datetime:  
   ```
     1 CHAN
     2 DATE 14 Jun 2020
@@ -131,12 +132,13 @@ as far as possible. The instances where this is not the case, is:
     
     >> chan_date: '2020-06-14 18:24:09.000Z'
   ```
-
+ * ISO dates are used wherever possible to allow querying over time 
+ ranges.
  * An individual record (e.g. `@I2@`) is currently used as the document 
  `_id` in MongoDB.
  
  * An embedded database structure is sought, but a secondary family
-   database has been retained until that structure is settled on. These two 
+   database has been retained until the data is fully embedded. These two 
    databases are the
      - `person`, and
      - `family` databases.
@@ -149,42 +151,42 @@ as far as possible. The instances where this is not the case, is:
 ## Example MongoDB Queries
 
 
-* **Q** Get all husbands and their marriage dates
-```json
+* **Q**: Get all husbands and their marriage dates
+```bash
 db.coll.aggregate([
     {
-        $lookup: {
-            from: "family",
-            localField: "_id",
-            foreignField: "husb",
-            as: "husband"
+        "$lookup": {
+            "from": "family",
+            "localField": "_id",
+            "foreignField": "husb",
+            "as": "husband"
         }
     },
     {
-        $match: {
-            "husband": {$ne: []}
+        "$match": {
+            "husband": {"$ne": []}
         }
     },
     {
-        $unwind: "$husband"
+        "$unwind": "$husband"
     },
     {
-        $project: {"husband.marr": 1}
+        "$project": {"husband.marr": 1}
     }, 
 ])
 ```
 
 * **Q**: Which town had the most marriages
-```json
+```bash
 db.coll.aggregate([
      {
-        "$match": { "PLAC": {$ne: null}}
+        "$match": { "plac": {$ne: null}}
      },
      {  
         "$group": {
-            _id: "$plac",
-            count: {
-                $sum: 1
+            "_id": "$plac",
+            "count": {
+                "$sum": 1
             }
         }
     },
@@ -197,10 +199,10 @@ db.coll.aggregate([
 
 * **Q**: Average number of children per family
 
-```json
+```bash
 db.coll.aggregate([
     {
-        "$match":{ "chil": {$ne: null} }
+        "$match":{ "chil": {"$ne": null} }
     },
     {
         "$group":
@@ -226,8 +228,8 @@ db.coll.aggregate([
 
 ```
 
-* **Q** Get all ancestors of of an individual `@I3@`
-```json
+* **Q**: Get all ancestors of of an individual `@I3@`
+```bash
 db.coll.aggregate(
     [ 
         { "$graphLookup": { 
@@ -253,3 +255,20 @@ db.coll.aggregate(
     ]
 )
 ```
+
+## Integrating with R
+
+ * R packages requirements include:
+   * `mongolite`
+   
+ * todo: an R notebook will be provided
+ * Connecting to a MongoDB instance with database `gedcom`, collections `person` and `family`,
+ and located on a host with IP `10.22.14.2` and port `27017`
+ 
+ ```bash
+ library(mongolite)
+    person_coll = mongo(collection = "person", db = "gedcom", url = "mongodb://10.22.14.2:27017")
+    family_coll = mongo(collection = "family", db = "gedcom", url = "mongodb://10.22.14.2:27017")
+```
+   
+
