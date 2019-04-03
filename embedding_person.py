@@ -57,10 +57,12 @@ def _update_children(person_coll, parents: list, children: list):
     for child in children:
         # just for caution sake
 
-        if person_coll.find_one({'_id': child, 'parents': {'$exists': True, '$ne': []}}):
+        db_parents = person_coll.find_one({'_id': child, 'parents': {'$exists': True, '$ne': []}})
+        if db_parents:
             log.error('{} has multiple parents... is this possible?'.format(child))
             log.error('attempting to insert parents {}'.format(parents))
-            raise ValueError('Assumption is that children may not have multiple parents')
+            # raise ValueError('Assumption is that children may not have multiple parents')
+            parents += db_parents
         person_coll.find_one_and_update(
             {'_id': child},
             {"$set": {'parents': parents}}, upsert=True)
