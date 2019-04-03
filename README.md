@@ -4,9 +4,9 @@ Ingest a file in GEDCOM format into MongoDB.
 
 
 ## Summary
-Embed a lineage-linked _Genealogical Data Communication_ (GEDCOM)
-data model, which is structured around individuals and families 
-(see [wikpedia](https://en.wikipedia.org/wiki/GEDCOM)), 
+Embed a lineage-linked _Genealogical Data Communication  
+([GEDCOM](https://en.wikipedia.org/wiki/GEDCOM))
+data model, which is structured around individuals and families, 
 into a _MongoDB_ database.
  
  
@@ -45,14 +45,14 @@ An example of the GEDCOM file format is:
 0 TRLR
 ```
 
-This results in the following MongoDB structure:
+The ingestion of this file results in the following MongoDB structure:
 
 ```json
 some: { json: here }
 ```
 
 ## Conventions
- * Keys in the GEDCOM file (e.g. FAMS, NAME, ...) are retained as keys in MongoDB,
+ * Keys in the GEDCOM file (e.g. `FAMS`, `NAME`, ...) are retained as keys in MongoDB,
 as far as possible. The instances where this is not the case, are:
     -  sublist  
   ```
@@ -100,18 +100,13 @@ db.coll.aggregate([
 
 * **Q**: Which town had the most marriages
 ```json
-
-##
-# > which town had the most marriages
-#
-##
 db.coll.aggregate([
      {
         "$match": { "PLAC": {$ne: null}}
      },
      {  
         "$group": {
-            _id: "$PLAC",
+            _id: "$plac",
             count: {
                 $sum: 1
             }
@@ -137,7 +132,7 @@ db.coll.aggregate([
             "_id": "res",
             "total":
             {
-                "$sum": { "$size": "$CHIL" }
+                "$sum": { "$size": "$chil" }
             },
             "nr_arrays":
             {
@@ -157,10 +152,10 @@ db.coll.aggregate([
 
 * **Q** Get all ancestors of of an individual `@I3@`
 ```json
-db.duplessis_v2_schema.aggregate(
+db.coll.aggregate(
     [ 
         { "$graphLookup": { 
-            "from": "duplessis_v2_schema", 
+            "from": "coll", 
             "startWith": "$parents", 
             "connectFromField": "parents", 
             "connectToField": "_id", 
