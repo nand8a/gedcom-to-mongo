@@ -1,6 +1,6 @@
 import unittest
 import person
-import family
+import elements
 from datetime import datetime
 
 
@@ -23,7 +23,8 @@ class TestFamily(unittest.TestCase):
     def test_family(self):
         print('test_family')
         print(self.lines)
-        local_dict = family.parser(self.lines)
+        obj = elements.Family(self.lines)
+        local_dict = obj.parser()
         self.assertEqual({"_id": "{}".format(self.fam_id),
                           "_uid": "D87E88660DD8564B9820B9A149F0E2A39AD9",
                           "husb": "@I6862@",
@@ -33,11 +34,11 @@ class TestFamily(unittest.TestCase):
                                    "plac": "Graaff - Reinet"}
                           }, local_dict)
 
-    def test_children(self):
-        lines = ['1 CHIL @I1@', '1 CHIL @I2@']  # todo harden with regex
-        res_list, _ = family._children(lines, 0)
-        print(res_list)
-        self.assertEqual(['@I1@', '@I2@'], res_list)
+    # def test_children(self):
+    #     lines = ['1 CHIL @I1@', '1 CHIL @I2@']  # todo harden with regex
+    #     res_list = family.Family(lines)._children()
+    #     print(res_list)
+    #     self.assertEqual(['@I1@', '@I2@'], res_list)
 
 #
 # def _children(lines, i):
