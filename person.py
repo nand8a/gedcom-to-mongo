@@ -7,6 +7,13 @@ import re
 pp = pprint.PrettyPrinter(indent=4)
 
 
+def is_person(line: str):
+    if bool(re.search('0 @[A-Z0-9]*@ INDI', line)):
+        return True
+    else:
+        return False
+
+
 def _parse_chan(lines, i):
     """
     Deal with special case where integer counter follows [1,2,3] sequence

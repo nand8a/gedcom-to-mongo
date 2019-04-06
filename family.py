@@ -7,6 +7,12 @@ import re
 pp = pprint.PrettyPrinter(indent=4)
 
 
+def is_family(line: str):
+    if bool(re.search('0 @[A-Z0-9]*@ FAM', line)):
+        return True
+    else:
+        return False
+
 def _children(lines, i):
     children_list = []
     while i < len(lines) and '1 CHIL' in lines[i]:

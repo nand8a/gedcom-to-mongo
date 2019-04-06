@@ -41,7 +41,9 @@ if __name__ == '__main__':
 
     if args.ingest:
         log.info('ingesting data: processing {} and storing to {}'.format(args.ingest, settings.sink_db))
-        ingest.file_parser(args.ingest)
+        ingestor = ingest.FileIngestor(args.ingest)
+        ingestor.ingest()
+        log.info('REPORT: {}'.format(ingestor.meta_data))
     elif args.transformer:
         log.info('applying transformation pipelines')
         tr.processor()
