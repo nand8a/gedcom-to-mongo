@@ -3,11 +3,12 @@ import pprint
 log = logging.getLogger(__name__)
 import utils
 import re
+from abc import ABCMeta
 
 pp = pprint.PrettyPrinter(indent=4)
 
 
-class Family(object):
+class GedcomElement(metaclass=ABCMeta):
 
     def __init__(self, lines: list):
         self._lines = lines
@@ -38,6 +39,11 @@ class Family(object):
         else:
             return False
 
+
+class Family(GedcomElement):
+
+    def __init__(self, lines: list):
+        super(Family, self).__init__(lines)
 
     @staticmethod
     def is_family(line: str):
