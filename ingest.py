@@ -1,4 +1,3 @@
-import person
 import elements
 import logging
 import pprint
@@ -68,10 +67,10 @@ class FileIngestor(object):
                                 log.debug('appending... {}'.format(line))
                                 buffered_lines.append(line)
                         # done buffering
-                        if elements.is_family(buffered_lines[0]):
-                            data_dict = elements.parser(buffered_lines)
+                        if elements.Family.is_family(buffered_lines[0]):
+                            data_dict = elements.Family(buffered_lines).parser()
                             self.write(data_dict, 'family')
-                        elif person.is_person(buffered_lines[0]):
-                            data_dict = person.parser(buffered_lines)
+                        elif elements.Person.is_person(buffered_lines[0]):
+                            data_dict = elements.Person(buffered_lines).parser()
                             self.write(data_dict, 'person')
                 line = f.readline()

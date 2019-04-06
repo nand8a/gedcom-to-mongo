@@ -199,11 +199,11 @@ class Person(GedcomElement):
                 # todo: get rid of this awful index scheme
             elif self.current().startswith('1') and \
                     '1 CHAN' not in self.current():  # add exclusion for NAME here in case of i error
-                local_dict, i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
+                local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
                 self._parsed_dict.update(local_dict)
                 key = list(local_dict.keys())[0]
                 while self.current() and (self.current().split(' ')[0] != '1'):
-                    local_dict, i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
+                    local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
                     self._parsed_dict[key] = local_dict
             elif '1 CHAN' in self.current():
                 ret_dict  = self._parse_chan()
