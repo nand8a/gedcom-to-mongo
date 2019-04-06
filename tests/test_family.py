@@ -1,6 +1,6 @@
 import unittest
 import person
-import family
+import elements
 from datetime import datetime
 
 
@@ -23,7 +23,7 @@ class TestFamily(unittest.TestCase):
     def test_family(self):
         print('test_family')
         print(self.lines)
-        obj = family.Family(self.lines)
+        obj = elements.Family(self.lines)
         local_dict = obj.parser()
         self.assertEqual({"_id": "{}".format(self.fam_id),
                           "_uid": "D87E88660DD8564B9820B9A149F0E2A39AD9",

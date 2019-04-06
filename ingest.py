@@ -1,5 +1,5 @@
 import person
-import family
+import elements
 import logging
 import pprint
 from dbinterface import Db
@@ -68,8 +68,8 @@ class FileIngestor(object):
                                 log.debug('appending... {}'.format(line))
                                 buffered_lines.append(line)
                         # done buffering
-                        if family.is_family(buffered_lines[0]):
-                            data_dict = family.parser(buffered_lines)
+                        if elements.is_family(buffered_lines[0]):
+                            data_dict = elements.parser(buffered_lines)
                             self.write(data_dict, 'family')
                         elif person.is_person(buffered_lines[0]):
                             data_dict = person.parser(buffered_lines)

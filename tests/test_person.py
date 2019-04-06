@@ -1,5 +1,5 @@
 import unittest
-import person
+from elements import Person
 from datetime import datetime
 import utils
 
@@ -31,21 +31,21 @@ class TestPerson(unittest.TestCase):
             '2 CONC {}'.format(cls.conc_2),
             '0 @I4@ INDI'
         ]
+        cls.person = Person(cls.lines)
 
     def test_person_note(self):
-        i = 16
-        ret_string, _ = person._person_note(self.lines, i)
+        self.person._i = 16
+        ret_string = self.person._person_note()
         self.assertEqual(ret_string, '{} {}'.format(self.conc_1, self.conc_2))
 
-
     def test_person_chan(self):
-        i = 13
-        local_dict, res_i = person._parse_chan(self.lines, i)
+        self.person._i = 13
+        local_dict = self.person._parse_chan()
         self.assertEqual({'chan_date':
                           datetime.strptime('13 Sep 2016 20:14:25', '%d %b %Y %H:%M:%S')
                           }, local_dict)
-        self.assertEqual(res_i, 16)
 
+    # todo move this test out to utils test
     def test_person_sub(self):
         # test that works correctly after the BIRT key
         i = 6
@@ -68,9 +68,9 @@ class TestPerson(unittest.TestCase):
         self.assertEqual(res_i, i+1)
 
     def test_person_name(self):
-        i = 1
+        self.person._i = 1
         expect = {'name': 'Judith /du Plessis/', 'surn': 'du Plessis', 'givn': 'Judith'}
-        local_dict, res_1 = person._person_name(self.lines, i)
+        local_dict = self.person._person_name()
         self.assertEqual(expect, local_dict)
 
 
@@ -78,5 +78,6 @@ class TestPersonName(unittest.TestCase):
 
     def test_person_strip_key(self):
         lines = ['1 NAME Anna /du Toit/']
-        output, _ = person._person_name(lines, 0)
+        obj = Person(lines)
+        output = obj._person_name()
         self.assertEqual({'name': 'Anna /du Toit/'}, output)
