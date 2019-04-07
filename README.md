@@ -1,6 +1,6 @@
 
 [![Build Status](https://travis-ci.org/nand8a/gedcom-to-mongo.svg?branch=master)](https://travis-ci.org/nand8a/gedcom-to-mongo)
-
+[![Coverage Status](https://coveralls.io/repos/github/nand8a/gedcom-to-mongo/badge.svg?branch=master)](https://coveralls.io/github/nand8a/gedcom-to-mongo?branch=master)
 
 # gedcom-to-mongo
 
