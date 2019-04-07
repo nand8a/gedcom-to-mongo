@@ -11,3 +11,8 @@ script:
                                         #   # command to run tests
                                         #   script:
                                         #     - pytest
+                                        #
+        - coverage run main.py
+
+after_success:
+        coveralls
