@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/nand8a/gedcom-to-mongo.svg?branch=master)](https://travis-ci.org/nand8a/gedcom-to-mongo)
+
+
 # gedcom-to-mongo
 
 Ingest a file in GEDCOM format into MongoDB.
