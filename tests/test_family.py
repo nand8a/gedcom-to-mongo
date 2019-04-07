@@ -1,5 +1,4 @@
 import unittest
-import person
 import elements
 from datetime import datetime
 
