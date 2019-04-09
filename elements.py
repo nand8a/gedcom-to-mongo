@@ -195,7 +195,7 @@ class Person(GedcomElement):
             elif '1 NAME' in self.current():
                 self._parsed_dict['name'] = self._person_name()
             elif '1 NOTE ' in self.current():  # todo: not DRY - duplicating string check
-                self._parsed_dict['note'], i = self._person_note()
+                self._parsed_dict['note'] = self._person_note()
                 # todo: get rid of this awful index scheme
             elif self.current().startswith('1') and \
                     '1 CHAN' not in self.current():  # add exclusion for NAME here in case of i error

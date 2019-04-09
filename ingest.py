@@ -1,7 +1,7 @@
 import elements
 import logging
 import pprint
-from dbinterface import Db
+from dbinterface import MongoDb
 import re
 import settings
 log = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class FileIngestor(object):
         """
         if tbl_key not in settings.sink_tbl.keys():
             raise ValueError('provided table key {}, is not in settings list of keys'.format(tbl_key))
-        Db().get_connect().collection(settings.sink_db, settings.sink_tbl[tbl_key]).insert_one(data)
+        MongoDb().collection(settings.sink_db, settings.sink_tbl[tbl_key]).insert_one(data)
         self.meta_data['count'][tbl_key] += 1
 
     def read(self):
@@ -61,7 +61,6 @@ class FileIngestor(object):
                                 # must deal sequentially due to max recursion depth
                                 f.seek(last_pos)
                                 log.debug('full record passed to parser is: {}'.format(buffered_lines))
-                                log.info('Connection retrieved : {}'.format(Db().get_connect()))
                                 break
                             elif int(line[0]) > 0:
                                 log.debug('appending... {}'.format(line))

@@ -1,7 +1,7 @@
 import logging
 import pprint
 
-from dbinterface import Db
+from dbinterface import *
 import settings
 
 log = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ pp = pprint.PrettyPrinter(indent=4)
 __proc_name__ = 'embed_p1'
 
 
-def processor():
+def processor(data_source: DataStore):
     """
     run over the family database and embed some of the values in the person database.
     The purpose of this embedding module is to be a replayable pipeline. There are currently
@@ -21,8 +21,8 @@ def processor():
     we process the family section without writing it to a db first).s
     :return:
     """
-    family_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_family)
-    person_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_person)
+    family_coll = data_source().collection(settings.sink_db, settings.sink_tbl['family'])
+    person_coll = data_source().collection(settings.sink_db, settings.sink_tbl['person'])
     # get a mongo cursor
     cursor = family_coll.find(
         {'processors': {'$not': {'$elemMatch': {'$regex': __proc_name__}}}}

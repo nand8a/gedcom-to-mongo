@@ -1,30 +1,38 @@
 import logging
 log = logging.getLogger(__name__)
 from pymongo import MongoClient
+from abc import ABCMeta
 
 
-class Db(object):
+class DataStore(metaclass=ABCMeta):
 
     __instance = None
 
     def __new__(cls, *args, **kwargs):
-        if Db.__instance is None:
-            Db.__instance = object.__new__(cls)
-        return Db.__instance
+        if DataStore.__instance is None:
+            DataStore.__instance = object.__new__(cls)
+        return DataStore.__instance
 
-    def connect(self, host='localhost', port=27017):
+    def __init__(self, host, port):
         self.host = host
         self.port = port
+        self.__connection = None
+
+
+class MongoDb(DataStore):
+
+    def __init__(self, host='localhost', port=27017):
+        super(MongoDb, self).__init__(host, port)
         try:
             log.info('opening mongo client connection to {}:{}'.format(host, port))
-            self.mc = MongoClient(host, port)
+            self.__connection = MongoClient(host, port)
         except Exception as e:
             log.error('Cannot connect to {}.{}: {}'.format(host, port, e))
             raise
-        return self.get_connect()
 
-    def get_connect(self):
-        if not (self.host and self.port):
+    @property
+    def connection(self):
+        if not self.__connection:
             raise ValueError('connection not initialised')
         else:
             return self
@@ -38,10 +46,10 @@ class Db(object):
         """
         try:
             log.info('accessing db {} and collection {}'.format(db, coll))
-            m_db = self.mc[db]
+            m_db = self.__connection[db]
             if drop:
                 m_db.drop_collection(coll)
-            coll = self.mc[db][coll]
+            coll = self.__connection[db][coll]
             index_field = index_field
             if index_field:
                 log.info('ensure index on {}'.format(index_field))
