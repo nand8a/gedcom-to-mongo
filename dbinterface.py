@@ -1,34 +1,44 @@
 import logging
 log = logging.getLogger(__name__)
 from pymongo import MongoClient
-from abc import ABCMeta
+from abc import ABC, abstractmethod
+# from typing import *
 
-
-class DataStore(metaclass=ABCMeta):
+class DataConnector(ABC):
 
     __instance = None
 
     def __new__(cls, *args, **kwargs):
-        if DataStore.__instance is None:
-            DataStore.__instance = object.__new__(cls)
-        return DataStore.__instance
+        if DataConnector.__instance is None:
+            DataConnector.__instance = object.__new__(cls)
+        return DataConnector.__instance
 
     def __init__(self, host, port):
         self.host = host
         self.port = port
         self.__connection = None
 
+    @abstractmethod
+    def connection(self):
+        raise NotImplementedError()
 
-class MongoDb(DataStore):
 
-    def __init__(self, host='localhost', port=27017):
-        super(MongoDb, self).__init__(host, port)
-        try:
-            log.info('opening mongo client connection to {}:{}'.format(host, port))
-            self.__connection = MongoClient(host, port)
-        except Exception as e:
-            log.error('Cannot connect to {}.{}: {}'.format(host, port, e))
-            raise
+class MongoConnector(DataConnector):
+
+    def __init__(self, host, port):
+        super(MongoConnector, self).__init__(host, port)
+        if host and port:
+            self.host = host
+            self.port = port
+            try:
+                log.info('opening mongo client connection to {}:{}'.format(host, port))
+                self.__connection = MongoClient(host, port)
+            except Exception as e:
+                log.error('Cannot connect to {}.{}: {}'.format(host, port, e))
+                raise
+        else:
+            # already instantiated - we think
+            pass
 
     @property
     def connection(self):
@@ -36,6 +46,29 @@ class MongoDb(DataStore):
             raise ValueError('connection not initialised')
         else:
             return self
+
+
+
+class DataStore(ABC):
+
+    def __init__(self, connector: DataConnector):
+        self.connector = connector
+
+    @abstractmethod
+    def read(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def write(self, *args, **kwargs):
+        raise NotImplementedError()
+
+
+class MongoDb(DataStore):
+
+
+    def __init__(self, connector: DataConnector, db, coll):
+        super(MongoDb).__init__(connector)
+        self.db = db
+
 
     def collection(self, db, coll, index_field=None, drop=False):
         """
@@ -46,10 +79,10 @@ class MongoDb(DataStore):
         """
         try:
             log.info('accessing db {} and collection {}'.format(db, coll))
-            m_db = self.__connection[db]
+            m_db = self.connector.connection()[db]
             if drop:
                 m_db.drop_collection(coll)
-            coll = self.__connection[db][coll]
+            coll = m_db[db][coll]
             index_field = index_field
             if index_field:
                 log.info('ensure index on {}'.format(index_field))
@@ -60,4 +93,25 @@ class MongoDb(DataStore):
             log.error('Unable to access db {} and collection {}: {}'.format(db, coll, e))
             raise
         return coll
+
+
+    def read_many(self, query=, projection={}):
+        """
+        This could return many or one
+        :param query:
+        :param projection:
+        :return:
+        """
+        cursor = .find(
+            {'processors': {'$not': {'$elemMatch': {'$regex': __proc_name__}}}}
+        )
+        record = cursor.next()
+        yield
+
+
+
+
+
+
+
 
