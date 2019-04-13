@@ -1,11 +1,7 @@
 import elements
-import logging
 import pprint
-from dbinterface import MongoDb
-import re
-import settings
+from dbinterface import *
 log = logging.getLogger(__name__)
-
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -19,18 +15,18 @@ class FileIngestor(object):
     def ingest(self):
         self.read()
 
-    def write(self, data: dict, tbl_key: str):
+    def write(self, data: dict, datastore: DataStore):  # todo pass in the correct data connector here
         """
         write function to persist data from the file to a mongo database
         as configured in settings
         :param data:
-        :param tbl_key:
+        :param datastore: a datastore to write to
         :return:
         """
-        if tbl_key not in settings.sink_tbl.keys():
-            raise ValueError('provided table key {}, is not in settings list of keys'.format(tbl_key))
-        MongoDb().collection(settings.sink_db, settings.sink_tbl[tbl_key]).insert_one(data)
-        self.meta_data['count'][tbl_key] += 1
+        datastore.write(data)
+        #MongoDb().collection(settings.sink_db, settings.sink_tbl[tbl_key]).insert_one(data)
+        # todo can get the collection name out here and use it for the metacount
+        #self.meta_data['count'] += 1
 
     def read(self):
         """
@@ -38,6 +34,8 @@ class FileIngestor(object):
         for line and interpreting the leftmost code and keys.
         :return:
         """
+        person_db = MongoDb(MongoConnector)  # is a singleton so we good #### here HERE
+        family_db = MongoConnector.connection
         with open(self.filename, 'r',  encoding='utf-8-sig') as f:
             line = f.readline()
             while line != "":
@@ -68,8 +66,8 @@ class FileIngestor(object):
                         # done buffering
                         if elements.Family.is_family(buffered_lines[0]):
                             data_dict = elements.Family(buffered_lines).parser()
-                            self.write(data_dict, 'family')
+                            self.write(data_dict, family_connector)
                         elif elements.Person.is_person(buffered_lines[0]):
                             data_dict = elements.Person(buffered_lines).parser()
-                            self.write(data_dict, 'person')
+                            self.write(data_dict, person_connector)
                 line = f.readline()

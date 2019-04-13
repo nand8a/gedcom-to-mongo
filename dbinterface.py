@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from abc import ABC, abstractmethod
 # from typing import *
 
+
 class DataConnector(ABC):
 
     __instance = None
@@ -13,11 +14,20 @@ class DataConnector(ABC):
             DataConnector.__instance = object.__new__(cls)
         return DataConnector.__instance
 
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-        self.__connection = None
+    def __init__(self, *args, **kwargs):
+        self._connection = None
 
+    @abstractmethod
+    def connect(self, host, port):
+        """
+        create connection
+        :param host: hostname
+        :param port: port number
+        :return: this object
+        """
+        raise NotImplementedError()
+
+    @property
     @abstractmethod
     def connection(self):
         raise NotImplementedError()
@@ -25,28 +35,36 @@ class DataConnector(ABC):
 
 class MongoConnector(DataConnector):
 
-    def __init__(self, host, port):
-        super(MongoConnector, self).__init__(host, port)
-        if host and port:
-            self.host = host
-            self.port = port
-            try:
-                log.info('opening mongo client connection to {}:{}'.format(host, port))
-                self.__connection = MongoClient(host, port)
-            except Exception as e:
-                log.error('Cannot connect to {}.{}: {}'.format(host, port, e))
-                raise
-        else:
-            # already instantiated - we think
-            pass
+    def __init__(self):
+        super(MongoConnector, self).__init__()
+        self.host = None
+        self.port = None
+        self._connection = None
 
     @property
     def connection(self):
-        if not self.__connection:
+        if not self._connection:
             raise ValueError('connection not initialised')
         else:
-            return self
+            return self._connection
 
+    @connection.setter
+    def connection(self, args_tuple):
+        """
+        :param args_tuple: (host, port)
+        :return:
+        """
+        try:
+            self.host, self.port = args_tuple
+        except ValueError:
+            raise ValueError("Pass an iterable with two items")
+
+        try:
+            log.info('opening mongo client connection to {}:{}'.format(self.host, self.port))
+            self._connection = MongoClient(self.host, self.port)
+        except Exception as e:
+            log.error('Cannot connect to {}.{}: {}'.format(self.host, self.port, e))
+            raise
 
 
 class DataStore(ABC):
@@ -64,13 +82,12 @@ class DataStore(ABC):
 
 class MongoDb(DataStore):
 
-
     def __init__(self, connector: DataConnector, db, coll):
         super(MongoDb).__init__(connector)
         self.db = db
+        self.coll = self._collection(self.db, coll)
 
-
-    def collection(self, db, coll, index_field=None, drop=False):
+    def _collection(self, db, coll, index_field=None, drop=False):
         """
         get a  collection object, and if it already exists, raise exception or drop it
         :param db: db name
@@ -94,19 +111,21 @@ class MongoDb(DataStore):
             raise
         return coll
 
-
-    def read_many(self, query=, projection={}):
+    # todo - see where all the reads are and put them in here, then clean up
+    #
+    def read_unprocessed(self, processor_name):
         """
-        This could return many or one
-        :param query:
-        :param projection:
-        :return:
+        :param processor_name:
+        :return: yield result from cursor
         """
-        cursor = .find(
-            {'processors': {'$not': {'$elemMatch': {'$regex': __proc_name__}}}}
+        cursor = self.coll.find(
+            {'processors': {'$not': {'$elemMatch': {'$regex': processor_name}}}}
         )
-        record = cursor.next()
-        yield
+        while cursor.hasNext():
+            yield cursor.next()
+
+
+
 
 
 
