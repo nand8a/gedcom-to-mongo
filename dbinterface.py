@@ -15,7 +15,7 @@ class DataConnector(ABC):
         return DataConnector.__instance
 
     def __init__(self, *args, **kwargs):
-        self._connection = None
+        pass
 
     @abstractmethod
     def connect(self, host, port):
@@ -37,9 +37,6 @@ class MongoConnector(DataConnector):
 
     def __init__(self):
         super(MongoConnector, self).__init__()
-        self.host = None
-        self.port = None
-        self._connection = None
 
     @property
     def connection(self):
@@ -48,20 +45,13 @@ class MongoConnector(DataConnector):
         else:
             return self._connection
 
-    @connection.setter
-    def connection(self, args_tuple):
-        """
-        :param args_tuple: (host, port)
-        :return:
-        """
-        try:
-            self.host, self.port = args_tuple
-        except ValueError:
-            raise ValueError("Pass an iterable with two items")
-
+    def connect(self, host, port):
+        self.host = host
+        self.port = port
         try:
             log.info('opening mongo client connection to {}:{}'.format(self.host, self.port))
             self._connection = MongoClient(self.host, self.port)
+            return self
         except Exception as e:
             log.error('Cannot connect to {}.{}: {}'.format(self.host, self.port, e))
             raise
