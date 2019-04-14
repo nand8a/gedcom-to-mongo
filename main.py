@@ -28,7 +28,7 @@ if __name__ == '__main__':
     # open connection
     try:
         log.info('loading source data db')
-        src_connector = dbi.MongoConnector(host=args.host, port=int(args.port))
+        src_connector = dbi.MongoConnector().connect(args.host, args.port)
         # coll = src_conn.collection(args.db, args.coll)
         log.info('DB connection initialised : {}'.format(src_connector))
     except Exception as e:

@@ -57,23 +57,25 @@ class MongoConnector(DataConnector):
             raise
 
 
-class DataStore(ABC):
+class DataStore(ABC, object):
 
     def __init__(self, connector: DataConnector):
         self.connector = connector
 
-    @abstractmethod
-    def read(self, *args, **kwargs):
-        raise NotImplementedError()
-
+    # @abstractmethod
+    # def read(self, *args, **kwargs):
+    #     raise NotImplementedError()
+    #
     def write(self, *args, **kwargs):
         raise NotImplementedError()
 
 
 class MongoDb(DataStore):
 
+    # what other kind of connectors can the mongodb dao have? will always be mongoconnector
+    # will have to rethink this:  this object should come with the connector backed in
     def __init__(self, connector: DataConnector, db, coll):
-        super(MongoDb).__init__(connector)
+        super(MongoDb, self).__init__(connector)
         self.db = db
         self.coll = self._collection(self.db, coll)
 
@@ -86,10 +88,10 @@ class MongoDb(DataStore):
         """
         try:
             log.info('accessing db {} and collection {}'.format(db, coll))
-            m_db = self.connector.connection()[db]
+            m_db = self.connector.connection[db]
             if drop:
                 m_db.drop_collection(coll)
-            coll = m_db[db][coll]
+            coll = m_db[coll]
             index_field = index_field
             if index_field:
                 log.info('ensure index on {}'.format(index_field))
@@ -111,16 +113,50 @@ class MongoDb(DataStore):
         cursor = self.coll.find(
             {'processors': {'$not': {'$elemMatch': {'$regex': processor_name}}}}
         )
-        while cursor.hasNext():
-            yield cursor.next()
+        record = cursor.next()
+        while record:
+            yield record
+            record = cursor.next()
 
+    def read_parent_family_counts(self, id):
+        """
+        get the parent that corresponds to the id <id>, and project
+        only their married status, their child list and if they have spouses
+        :param id:
+        :return: a dictionary of {'married_count': X, 'children_count': Y, spouses: []}
+        """
+        cursor = self.coll.find_one({'_id': id},
+                                    {'married_count': 1,
+                                     'children_count': 1,
+                                     'spouses': 1})
+        record = cursor.next()
+        while record:
+            yield record
+            record = cursor.next()
 
+    def write_update(self, id, update_dict):
+        """
+        :param id:
+        :param update_dict:
+        :return:
+        """
+        self.coll.find_one_and_update(
+            {'_id': id},
+            {"$set": update_dict}, upsert=True)
 
+    def write(self, data_dict):
+        """
+        write a dictionary to mongo
+        :param data_dict:
+        :return:
+        """
+        self.coll.insert_one(data_dict)
 
-
-
-
-
-
-
-
+    def write_processor(self, id, processor_name):
+        """
+        Add the field 'processors': <processor_name>, where id=<id>
+        :param processor_name:
+        :return:
+        """
+        self.coll.family_coll.find_one_and_update(
+            {'_id': id}, {"$set": {'processors': [processor_name]}}, upsert=True)

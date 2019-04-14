@@ -1,6 +1,7 @@
 import elements
 import pprint
 from dbinterface import *
+import settings
 log = logging.getLogger(__name__)
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -34,8 +35,8 @@ class FileIngestor(object):
         for line and interpreting the leftmost code and keys.
         :return:
         """
-        person_db = MongoDb(MongoConnector)  # is a singleton so we good #### here HERE
-        family_db = MongoConnector.connection
+        person_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
+        family_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
         with open(self.filename, 'r',  encoding='utf-8-sig') as f:
             line = f.readline()
             while line != "":
@@ -66,8 +67,8 @@ class FileIngestor(object):
                         # done buffering
                         if elements.Family.is_family(buffered_lines[0]):
                             data_dict = elements.Family(buffered_lines).parser()
-                            self.write(data_dict, family_connector)
+                            self.write(data_dict, family_store)
                         elif elements.Person.is_person(buffered_lines[0]):
                             data_dict = elements.Person(buffered_lines).parser()
-                            self.write(data_dict, person_connector)
+                            self.write(data_dict, person_store)
                 line = f.readline()
