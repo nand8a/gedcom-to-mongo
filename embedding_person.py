@@ -41,7 +41,8 @@ def processor(data_connector: DataConnector):
             parents = _get_parents(record)
             # goto parents and increment their marriage counters
             # todo move db stuffs here, then pass the dictionaries in
-            _update_parents(parents, len(children), person_coll)
+            spouses = _get_spouses(parents, parent, parent_record)
+            _update_parents(parents, len(children), spouses)
             # for each of the children, provide these as the parents
             _update_children(person_coll, parents, children)
             count += 1
@@ -85,23 +86,23 @@ def _get_spouses(parents: list, current_parent: str, current_record: dict):
     return spouses
 
 
-def _update_parents(parents: list, nr_of_children, person_coll):
+def _update_parents(parent_record: dict, nr_of_children: int, spouses: list):
     """
-    format dictionary where
-    :param parents:
-    :param nr_of_children:
-    :param person_coll:
-    :return:
+    Increment the parent in <parent_record>'s married_counter (they appear in
+    a family, so increment), add additional spouses to their spouses list too.
+    :param parent_record: the parent record for the parent currently under consideratio n
+    :param nr_of_children: a scalar number of children in this current family iteration
+    :param spouses: currently just a pass through to build the dictionary
+    :return: a dictionary containing the updated fields 'married_count', 'children_count'
+    and 'spouses'
     """
     married_count = 1
     if 'married_count' in parent_record:
         married_count += parent_record['married_count']
-    log.debug('{}\'s marriage counter is {}. updating in mongo'.format(
-        parent, married_count))
+    log.debug('{}\'s marriage counter is {}'.format(parent_record['_id'], married_count))
 
-    spouses = _get_spouses(parents, parent, parent_record)
-    log.debug('new spouses {}'.format(spouses))
-    log.debug('{}\'s spouse list is {}'.format(parent, spouses))
+    # todo this is a pass through - fix
+    log.debug('{}\'s spouse list is {}'.format(parent_record['_id'], spouses))
 
     children_count = nr_of_children
     if 'children_count' in parent_record:
@@ -114,8 +115,12 @@ def _update_parents(parents: list, nr_of_children, person_coll):
     return update_dict
 
 
-
 def _get_parents(record: dict):
+    """
+    Given a family record, extract the parents
+    :param record:
+    :return:
+    """
     parents = []
     try:
         parents.append(record['husb'])

@@ -1,18 +1,25 @@
 import logging
 log = logging.getLogger(__name__)
-from pymongo import MongoClient
+import pymongo
 from abc import ABC, abstractmethod
 # from typing import *
 
 
-class DataConnector(ABC):
+class DataConnector(ABC):  # pragma: no cover
 
     __instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # pragma: no cover
         if DataConnector.__instance is None:
+            print('creating a new object')
             DataConnector.__instance = object.__new__(cls)
+        else:
+            print ('it is not none, it is {}'.format(DataConnector.__instance))
         return DataConnector.__instance
+
+    @classmethod
+    def destroy(cls):
+        DataConnector.__instance = None
 
     def __init__(self, *args, **kwargs):
         pass
@@ -37,6 +44,11 @@ class MongoConnector(DataConnector):
 
     def __init__(self):
         super(MongoConnector, self).__init__()
+        try:
+            if self._connection:
+                pass
+        except AttributeError:
+            self._connection = None  # it has not been set
 
     @property
     def connection(self):
@@ -48,9 +60,10 @@ class MongoConnector(DataConnector):
     def connect(self, host, port):
         self.host = host
         self.port = port
+        print(type(pymongo.MongoClient))
         try:
             log.info('opening mongo client connection to {}:{}'.format(self.host, self.port))
-            self._connection = MongoClient(self.host, self.port)
+            self._connection = pymongo.MongoClient(self.host, self.port)
             return self
         except Exception as e:
             log.error('Cannot connect to {}.{}: {}'.format(self.host, self.port, e))
