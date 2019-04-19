@@ -145,10 +145,7 @@ class MongoDb(DataStore):
                                     {'married_count': 1,
                                      'children_count': 1,
                                      'spouses': 1})
-        record = cursor.next()
-        while record:
-            yield record
-            record = cursor.next()
+        return cursor
 
     def write_update(self, id, update_dict):
         """
