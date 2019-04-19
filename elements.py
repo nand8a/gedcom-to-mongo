@@ -129,15 +129,15 @@ class Person(GedcomElement):
             Exception('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
         self.next()
         key = 'chan_date'
-        print(' lines ---- chan ---- {}'.format(self._lines))
+        log.debug(' lines ---- chan ---- {}'.format(self._lines))
         if '2 DATE'.lower() not in self.current().lower():
-            print('warning: expected a date first... pluggin')
+            log.debug('warning: expected a date first... pluggin')
             date = ''
         else:
             date = self.current().lstrip('2 DATE ').replace('\n', '')
         self.next()
         if '3 time' not in self.current().lower():
-            print('warning: expected a time, but none')
+            log.debug('warning: expected a time, but none')
             time = ''
         else:
             # todo this lstrip chap is dangerous
@@ -157,12 +157,12 @@ class Person(GedcomElement):
         todo: this needs to be cleaned up as far as these awful
         string keys are concerned - move them to enum or other class
         """
-        print('doing person NOTE NOTE NOTE')
+        log.debug('doing person NOTE NOTE NOTE')
         if self.current() and self.current().startswith('1 NOTE'):
-            print('definitely doing NOTE NOTE NOTE')
+            log.debug('definitely doing NOTE NOTE NOTE')
             ret = re.sub('^1 NOTE ', '', self.current()) + ' '
             self.next()
-            print('next is {}'.format(self.current()))
+            log.debug('next is {}'.format(self.current()))
             while self.current() and self.current().startswith('2 CON'):  # deals with CONC or CONT
                 ret += re.sub('^2 CON[CT]* ', '', self.current()) + ' '
                 self.next()
@@ -191,13 +191,6 @@ class Person(GedcomElement):
         """
         # counter = 0
         while self.has_next():
-            print(self._i)
-            print(self._lines[self._i])
-            print(self._lines)
-            # if counter > 30:
-            #     import sys
-            #     sys.exit(1)
-            # counter += 1
             if 'INDI' in self.current():
                 identifier = self.current().split(' ')[1]
                 log.debug('INDI: {}'.format(identifier))
