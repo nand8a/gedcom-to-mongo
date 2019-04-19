@@ -3,10 +3,9 @@ from unittest.mock import MagicMock
 import unittest
 from unittest import mock
 from dbinterface import *
-import pymongo
 
 
-class test(unittest.TestCase):
+class TestConnector(unittest.TestCase):
 
     def tearDown(self) -> None:
         MongoConnector().destroy()
@@ -30,3 +29,22 @@ class test(unittest.TestCase):
 
         obj._connection = object
         obj.connection()
+
+
+class TestMongoDb(unittest.TestCase):
+
+    def test_constructor_failure(self):
+        # test if either db connection of collection connection exception
+        # is handled by checking the latter only
+        dconnector = MagicMock()
+        coll = MagicMock()
+        coll.__getitem__.side_effect = ValueError()
+        dconnector.connection.__getitem__.return_value = coll
+
+        with self.assertRaises(ValueError):
+            MongoDb(dconnector, 'db_name', 'db_coll')
+
+    # todo replace with integration test
+    def test_constructor_success(self):
+        MongoDb(MagicMock(), 'db_name', 'db_coll')
+

@@ -60,7 +60,6 @@ class MongoConnector(DataConnector):
     def connect(self, host, port):
         self.host = host
         self.port = port
-        print(type(pymongo.MongoClient))
         try:
             log.info('opening mongo client connection to {}:{}'.format(self.host, self.port))
             self._connection = pymongo.MongoClient(self.host, self.port)
@@ -70,7 +69,7 @@ class MongoConnector(DataConnector):
             raise
 
 
-class DataStore(ABC, object):
+class DataStore(ABC, object):   # pragma: no cover
 
     def __init__(self, connector: DataConnector):
         self.connector = connector
@@ -90,9 +89,18 @@ class MongoDb(DataStore):
     def __init__(self, connector: DataConnector, db, coll):
         super(MongoDb, self).__init__(connector)
         self.db = db
+        # mongo already lazy loads the connection - for testing easier to move but leaving here for now
+        # todo
         self.coll = self._collection(self.db, coll)
 
-    def _collection(self, db, coll, index_field=None, drop=False):
+    # def _index_field(self, field_name):
+    #     self.coll.ensure_index(field_name, unique=True)
+
+    # drop connection
+    # if drop:
+    #     m_db.drop_collection(coll)
+
+    def _collection(self, db, coll):
         """
         get a  collection object, and if it already exists, raise exception or drop it
         :param db: db name
@@ -102,16 +110,8 @@ class MongoDb(DataStore):
         try:
             log.info('accessing db {} and collection {}'.format(db, coll))
             m_db = self.connector.connection[db]
-            if drop:
-                m_db.drop_collection(coll)
             coll = m_db[coll]
-            index_field = index_field
-            if index_field:
-                log.info('ensure index on {}'.format(index_field))
-                coll.ensure_index(index_field, unique=True)
-            else:
-                log.info('not creating an index on the collection')
-        except Exception as e:
+        except ValueError as e:
             log.error('Unable to access db {} and collection {}: {}'.format(db, coll, e))
             raise
         return coll
