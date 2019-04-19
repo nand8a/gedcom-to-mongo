@@ -100,6 +100,9 @@ class MongoDb(DataStore):
     # if drop:
     #     m_db.drop_collection(coll)
 
+    def read_person(self, id):
+        return self.coll.find_one({"_id": id})
+
     def _collection(self, db, coll):
         """
         get a  collection object, and if it already exists, raise exception or drop it
@@ -129,7 +132,7 @@ class MongoDb(DataStore):
         record = cursor.next()
         while record:
             yield record
-            record = cursor.next()
+            record = cursor.next()  # benefits over just returning cursor are that I can do ops on it here
 
     def read_parent_family_counts(self, id):
         """
@@ -142,10 +145,7 @@ class MongoDb(DataStore):
                                     {'married_count': 1,
                                      'children_count': 1,
                                      'spouses': 1})
-        record = cursor.next()
-        while record:
-            yield record
-            record = cursor.next()
+        return cursor
 
     def write_update(self, id, update_dict):
         """
@@ -171,5 +171,19 @@ class MongoDb(DataStore):
         :param processor_name:
         :return:
         """
-        self.coll.family_coll.find_one_and_update(
+        self.coll.find_one_and_update(
             {'_id': id}, {"$set": {'processors': [processor_name]}}, upsert=True)
+
+    def read_parents_of_child(self, child_id):
+        """
+        PARENTS db (todo - logical split)
+        :param id:
+        :return:
+        """
+        cursor = self.coll.find_one({'_id': child_id, 'parents': {'$exists': True, '$ne': []}})
+        # there is no benefit to having generators here --- remove
+        # todo
+        record = cursor.next()
+        while record:
+            yield record
+            record = cursor.next()

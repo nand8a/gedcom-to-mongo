@@ -46,7 +46,9 @@ if __name__ == '__main__':
         log.info('REPORT: {}'.format(ingestor.meta_data))
     elif args.transformer:
         log.info('applying transformation pipelines')
-        tr.processor()
+        family_coll = dbi.MongoDb(dbi.MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
+        person_coll = dbi.MongoDb(dbi.MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
+        tr.processor(family_coll, person_coll)
 
 
 
