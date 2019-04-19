@@ -126,7 +126,7 @@ class Person(GedcomElement):
         {'raw': <raw string date>: 'error': <parse error>}
         """
         if '1 chan' not in self.current().lower():
-            Exception('parse error: expected "1 chan", got "{}"'.format(lines[i].lower()))
+            Exception('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
         self.next()
         key = 'chan_date'
         print(' lines ---- chan ---- {}'.format(self._lines))
@@ -157,11 +157,14 @@ class Person(GedcomElement):
         todo: this needs to be cleaned up as far as these awful
         string keys are concerned - move them to enum or other class
         """
+        print('doing person NOTE NOTE NOTE')
         if self.current() and self.current().startswith('1 NOTE'):
+            print('definitely doing NOTE NOTE NOTE')
             ret = re.sub('^1 NOTE ', '', self.current()) + ' '
             self.next()
-            while self.current() and self.current().startswith('2 CONC'):
-                ret += re.sub('^2 CONC ', '', self.current()) + ' '
+            print('next is {}'.format(self.current()))
+            while self.current() and self.current().startswith('2 CON'):  # deals with CONC or CONT
+                ret += re.sub('^2 CON[CT]* ', '', self.current()) + ' '
                 self.next()
             # remove space introduced to account for continuations
             ret = ret[:-1]
@@ -186,7 +189,15 @@ class Person(GedcomElement):
         Given the list of string lines provided in the constructor,
         construct a dictionary in the necessary format
         """
+        # counter = 0
         while self.has_next():
+            print(self._i)
+            print(self._lines[self._i])
+            print(self._lines)
+            # if counter > 30:
+            #     import sys
+            #     sys.exit(1)
+            # counter += 1
             if 'INDI' in self.current():
                 identifier = self.current().split(' ')[1]
                 log.debug('INDI: {}'.format(identifier))
@@ -195,7 +206,7 @@ class Person(GedcomElement):
             elif '1 NAME' in self.current():
                 self._parsed_dict['name'] = self._person_name()
             elif '1 NOTE ' in self.current():  # todo: not DRY - duplicating string check
-                self._parsed_dict['note'], i = self._person_note()
+                self._parsed_dict['note'] = self._person_note()
                 # todo: get rid of this awful index scheme
             elif self.current().startswith('1') and \
                     '1 CHAN' not in self.current():  # add exclusion for NAME here in case of i error
@@ -206,7 +217,7 @@ class Person(GedcomElement):
                     local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
                     self._parsed_dict[key] = local_dict
             elif '1 CHAN' in self.current():
-                ret_dict  = self._parse_chan()
+                ret_dict = self._parse_chan()
                 self._parsed_dict.update(ret_dict)
         log.debug(pp.pprint(self._parsed_dict))
         return self._parsed_dict

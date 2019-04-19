@@ -1,11 +1,8 @@
 import elements
-import logging
 import pprint
-from dbinterface import Db
-import re
+from dbinterface import *
 import settings
 log = logging.getLogger(__name__)
-
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -19,18 +16,18 @@ class FileIngestor(object):
     def ingest(self):
         self.read()
 
-    def write(self, data: dict, tbl_key: str):
+    def write(self, data: dict, datastore: DataStore):  # todo pass in the correct data connector here
         """
         write function to persist data from the file to a mongo database
         as configured in settings
         :param data:
-        :param tbl_key:
+        :param datastore: a datastore to write to
         :return:
         """
-        if tbl_key not in settings.sink_tbl.keys():
-            raise ValueError('provided table key {}, is not in settings list of keys'.format(tbl_key))
-        Db().get_connect().collection(settings.sink_db, settings.sink_tbl[tbl_key]).insert_one(data)
-        self.meta_data['count'][tbl_key] += 1
+        datastore.write(data)
+        #MongoDb().collection(settings.sink_db, settings.sink_tbl[tbl_key]).insert_one(data)
+        # todo can get the collection name out here and use it for the metacount
+        #self.meta_data['count'] += 1
 
     def read(self):
         """
@@ -38,6 +35,8 @@ class FileIngestor(object):
         for line and interpreting the leftmost code and keys.
         :return:
         """
+        person_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
+        family_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
         with open(self.filename, 'r',  encoding='utf-8-sig') as f:
             line = f.readline()
             while line != "":
@@ -61,7 +60,6 @@ class FileIngestor(object):
                                 # must deal sequentially due to max recursion depth
                                 f.seek(last_pos)
                                 log.debug('full record passed to parser is: {}'.format(buffered_lines))
-                                log.info('Connection retrieved : {}'.format(Db().get_connect()))
                                 break
                             elif int(line[0]) > 0:
                                 log.debug('appending... {}'.format(line))
@@ -69,8 +67,8 @@ class FileIngestor(object):
                         # done buffering
                         if elements.Family.is_family(buffered_lines[0]):
                             data_dict = elements.Family(buffered_lines).parser()
-                            self.write(data_dict, 'family')
+                            self.write(data_dict, family_store)
                         elif elements.Person.is_person(buffered_lines[0]):
                             data_dict = elements.Person(buffered_lines).parser()
-                            self.write(data_dict, 'person')
+                            self.write(data_dict, person_store)
                 line = f.readline()

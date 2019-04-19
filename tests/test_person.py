@@ -1,7 +1,9 @@
 import unittest
+from datetime import datetime
+
+import utils
 from elements import Person
 from datetime import datetime
-import utils
 
 
 class TestPerson(unittest.TestCase):
@@ -72,6 +74,35 @@ class TestPerson(unittest.TestCase):
         expect = {'name': 'Judith /du Plessis/', 'surn': 'du Plessis', 'givn': 'Judith'}
         local_dict = self.person._person_name()
         self.assertEqual(expect, local_dict)
+
+    def test_is_person(self):
+
+        self.assertTrue(Person.is_person('0 @11111111@ INDI'))
+        self.assertFalse(Person.is_person('@11@ INDI'))
+        self.assertFalse(Person.is_person('0 @11@ IND'))
+        self.assertFalse(Person.is_person(''))
+
+
+    def test_parser(self):
+        # functional test
+        parsed_output = {'_id': '@I3@',
+                         'name': {
+                             'name': 'Judith /du Plessis/',
+                             'surn': 'du Plessis',
+                             'givn': 'Judith'},
+                         'sex': 'F',
+                         'birt': {
+                                'date': datetime(1693, 1, 1, 0, 0), 'plac': 'Ierland'},
+                         '_uid': '5CB8557F5530F54C8A3A0FB66935E5E09AA6',
+                         'fams': '@F6@',
+                         'famc': '@F7@',
+                         'chan_date': datetime(2016, 9, 13, 20, 14, 25),
+                         'note': 'There is plenty of commentary here and more here.....'
+                         }
+
+        self.person._i = 0
+        self.assertEqual(self.person.parser(), parsed_output)
+
 
 
 class TestPersonName(unittest.TestCase):

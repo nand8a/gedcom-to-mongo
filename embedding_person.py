@@ -1,7 +1,7 @@
 import logging
 import pprint
 
-from dbinterface import Db
+from dbinterface import *
 import settings
 
 log = logging.getLogger(__name__)
@@ -11,7 +11,11 @@ pp = pprint.PrettyPrinter(indent=4)
 __proc_name__ = 'embed_p1'
 
 
-def processor():
+# the processor needs to write somewhere. it should write to a store
+# the processor should get data from the store, act/change it, then write it back
+# this should perhaps be that the processor doesn't contain reference to the store, it is
+# simply given data, then returns that data
+def processor(data_connector: DataConnector):
     """
     run over the family database and embed some of the values in the person database.
     The purpose of this embedding module is to be a replayable pipeline. There are currently
@@ -21,35 +25,33 @@ def processor():
     we process the family section without writing it to a db first).s
     :return:
     """
-    family_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_family)
-    person_coll = Db().get_connect().collection(settings.sink_db, settings.sink_tbl_person)
-    # get a mongo cursor
-    cursor = family_coll.find(
-        {'processors': {'$not': {'$elemMatch': {'$regex': __proc_name__}}}}
-    )
-    record = cursor.next()
+    family_coll = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
+    person_coll = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
+    # get a generator from the family collection
+    fam_gen = family_coll.read_unprocessed(__proc_name__)
     count = 0
-    while record:
-        # get children out of record
-        if 'chil' in record:
-            children = record['chil']
-        else:
-            children = []
-        parents = _get_parents(record)
-        # goto parents and increment their marriage counters
-        _update_parents(parents, len(children), person_coll)
-        # for each of the children, provide these as the parents
-        _update_children(person_coll, parents, children)
-        count += 1
-        # ok, everything is done, update that is has been processed
-        # todo - need to perform at the start too - harden
-        family_coll.find_one_and_update(
-            {'_id': record['_id']},
-            {"$set": {'processors': [__proc_name__]}}, upsert=True)
+    try:
+        while True:
+            record = next(fam_gen)
+            # get children out of record
+            if 'chil' in record:
+                children = record['chil']
+            else:
+                children = []
+            parents = _get_parents(record)
+            # goto parents and increment their marriage counters
+            # todo move db stuffs here, then pass the dictionaries in
+            spouses = _get_spouses(parents, parent, parent_record)
+            _update_parents(parents, len(children), spouses)
+            # for each of the children, provide these as the parents
+            _update_children(person_coll, parents, children)
+            count += 1
+            family_coll.write_processor(record['_id'], __proc_name__)
+    except StopIteration as e:
+        pass
 
-        record = cursor.next()
-#        if count == 10:
-#            break
+    #        if count == 10:
+    #            break
     log.info('processed {} records with {} processor'.format(count, __proc_name__))
 
 
@@ -84,36 +86,41 @@ def _get_spouses(parents: list, current_parent: str, current_record: dict):
     return spouses
 
 
-def _update_parents(parents: list, nr_of_children, person_coll):
-    for parent in parents:
-        parent_record = person_coll.find_one({'_id': parent},
-                                             {'married_count': 1,
-                                              'children_count': 1,
-                                              'spouses': 1})
-        married_count = 1
-        if 'married_count' in parent_record:
-            married_count += parent_record['married_count']
-        log.debug('{}\'s marriage counter is {}. updating in mongo'.format(
-            parent, married_count))
+def _update_parents(parent_record: dict, nr_of_children: int, spouses: list):
+    """
+    Increment the parent in <parent_record>'s married_counter (they appear in
+    a family, so increment), add additional spouses to their spouses list too.
+    :param parent_record: the parent record for the parent currently under consideratio n
+    :param nr_of_children: a scalar number of children in this current family iteration
+    :param spouses: currently just a pass through to build the dictionary
+    :return: a dictionary containing the updated fields 'married_count', 'children_count'
+    and 'spouses'
+    """
+    married_count = 1
+    if 'married_count' in parent_record:
+        married_count += parent_record['married_count']
+    log.debug('{}\'s marriage counter is {}'.format(parent_record['_id'], married_count))
 
-        spouses = _get_spouses(parents, parent, parent_record)
-        log.debug('new spouses {}'.format(spouses))
-        log.debug('{}\'s spouse list is {}'.format(parent, spouses))
+    # todo this is a pass through - fix
+    log.debug('{}\'s spouse list is {}'.format(parent_record['_id'], spouses))
 
-        children_count = nr_of_children
-        if 'children_count' in parent_record:
-            children_count += parent_record['children_count']
+    children_count = nr_of_children
+    if 'children_count' in parent_record:
+        children_count += parent_record['children_count']
 
-        update_dict = {'married_count': married_count,
-                       'children_count': children_count,
-                       'spouses': spouses}
+    update_dict = {'married_count': married_count,
+                   'children_count': children_count,
+                   'spouses': spouses}
 
-        person_coll.find_one_and_update(
-            {'_id': parent},
-            {"$set": update_dict}, upsert=True)
+    return update_dict
 
 
 def _get_parents(record: dict):
+    """
+    Given a family record, extract the parents
+    :param record:
+    :return:
+    """
     parents = []
     try:
         parents.append(record['husb'])
