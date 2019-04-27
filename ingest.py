@@ -33,7 +33,6 @@ class FileIngestor(object):
         :return:
         """
         with open(self.filename, 'r',  encoding='utf-8-sig') as f:
-            print('ONCE')
             line = f.readline()
             while line != "":
                 # strip away leading whitespace
@@ -78,6 +77,7 @@ class FileIngestor(object):
         :return:
         """
         try:
+            # todo - fix this key poop. smelly
             self.sinks['person'] = kwargs['person']
             self.sinks['family'] = kwargs['family']
         except KeyError as e:
