@@ -25,8 +25,6 @@ def processor(family_coll: MongoDb, person_coll: MongoDb):
     we process the family section without writing it to a db first).s
     :return:
     """
-    # family_coll = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
-    # person_coll = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
     # get a generator from the family collection
     fam_gen = family_coll.read_unprocessed(__proc_name__)
     count = 0

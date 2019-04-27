@@ -1,7 +1,6 @@
 import elements
 import pprint
 from dbinterface import *
-import settings
 log = logging.getLogger(__name__)
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -12,9 +11,7 @@ class FileIngestor(object):
     def __init__(self, source_filename):
         self.filename = source_filename
         self.meta_data = {'count': {'person': 0, 'family': 0}}
-
-    def ingest(self):
-        self.read()
+        self.sinks = {}
 
     def write(self, data: dict, datastore: DataStore):  # todo pass in the correct data connector here
         """
@@ -35,9 +32,8 @@ class FileIngestor(object):
         for line and interpreting the leftmost code and keys.
         :return:
         """
-        person_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
-        family_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
         with open(self.filename, 'r',  encoding='utf-8-sig') as f:
+            print('ONCE')
             line = f.readline()
             while line != "":
                 # strip away leading whitespace
@@ -67,8 +63,35 @@ class FileIngestor(object):
                         # done buffering
                         if elements.Family.is_family(buffered_lines[0]):
                             data_dict = elements.Family(buffered_lines).parser()
-                            self.write(data_dict, family_store)
+                            yield 'family', data_dict
                         elif elements.Person.is_person(buffered_lines[0]):
                             data_dict = elements.Person(buffered_lines).parser()
-                            self.write(data_dict, person_store)
+                            print('person done {}'.format(buffered_lines[0]))
+                            yield 'person', data_dict
                 line = f.readline()
+
+    def ingest(self, *args, **kwargs):
+        """
+        This ingestor is tightly coupled (presently) to person and family databases
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        try:
+            self.sinks['person'] = kwargs['person']
+            self.sinks['family'] = kwargs['family']
+        except KeyError as e:
+            log.error('ingest function not correctly called with "person=person.datasource", '
+                      'or "family=family.datasource"')
+            raise
+
+        try:
+            reader = self.read()
+            while True:
+                key, data = next(reader)
+                self.write(data, self.sinks[key])
+        except StopIteration as e:
+            pass
+
+
+
