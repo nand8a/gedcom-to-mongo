@@ -64,7 +64,7 @@ class TestIngest(unittest.TestCase):
         # test line being none conditional
         filehandler = MagicMock()
         buffered_lines = ['start']
-        filehandler.tell.side_effect = [10, 11, 12, 13]  # same length as readline
+        filehandler.tell.side_effect = [0]
         filehandler.readline.return_value = None
         io = ingest.FileIngestor('nf')
         io._buffered_read(filehandler, buffered_lines)
@@ -72,11 +72,43 @@ class TestIngest(unittest.TestCase):
 
         # deal with case where
 
+    @patch("builtins.open", new_callable=mock_open, read_data="0 does not matter")
+    @patch('ingest.log')
+    @patch('elements.Person')
+    @patch('elements.Family')
+    def test_ingest_read_family_person(self, mock_family_obj, mock_person_obj, mock_log, mock_open):
+        io = ingest.FileIngestor('nf')
+        io._buffered_read = MagicMock()
+        mock_family_obj.is_family.return_value = True
+        next(io.read())
+
+        mock_family_obj.is_family.return_value = False
+        mock_person_obj.is_person.return_value = True
+        next_gen = io.read()
+        next(next_gen)
+
+        mock_family_obj.is_family.return_value = False
+        mock_person_obj.is_person.return_value = False
+        next_gen = io.read()
+        with self.assertRaises(StopIteration) as context:
+            next(next_gen)
+
+        expected_calls_to_logger = [
+            call('this non-breaking functionality is not implemented')
+        ]
+        # print(mock_log.info.call_args_list)
+        mock_log.debug.assert_has_calls(expected_calls_to_logger, any_order=True)
+
+    @patch("builtins.open", new_callable=mock_open, read_data="1 breaking")
+    #@patch('ingest.log')
+    def test_ingest_read_faulty_line(self, mock_open):
+        io = ingest.FileIngestor('nf')
+        with self.assertRaises(RuntimeError) as context:
+            next(io.read())
 
 
-    # @patch("builtins.open", new_callable=mock_open, read_data="0 @I1@\n1 LINE1\n0 STUFF")
-    # @patch('ingest.log')
-    # @patch('elements.Person') # you are here
-    # def test_ingest_read_at_trlr(self, mock_log, mock_open):
-    #     io = ingest.FileIngestor('nf')
-    #     next(io.read())
+        # expected_calls_to_logger = [
+        #     call('file parsing complete\nStats:')
+        # ]
+        #
+        # mock_log.info.assert_has_calls(expected_calls_to_logger, any_order=True)

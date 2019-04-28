@@ -4,7 +4,7 @@ from dbinterface import *
 import logging
 from typing import Iterator
 log = logging.getLogger(__name__)
-print(logging.getLogger())
+
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -64,8 +64,6 @@ class FileIngestor(object):
             while line != "":
                 # strip away leading whitespace
                 line = line.lstrip(' ')
-                print(line)
-                print(log)
                 if line and line[0] == '0':
                     if line.startswith('0 TRLR'):
                         # termination symbol - explicitly terminate
@@ -73,22 +71,16 @@ class FileIngestor(object):
                         raise StopIteration('completed file parsing')
                     else:
                         # start buffering lines until the next 0
-                        print('--here')
                         buffered_lines = [line]
-                        print('-- {}'.format(buffered_lines))
                         self._buffered_read(f, buffered_lines)
                         # done buffering
                         if elements.Family.is_family(buffered_lines[0]):
                             data_dict = elements.Family(buffered_lines).parser()
-                            print("family done")
                             yield 'family', data_dict
                         elif elements.Person.is_person(buffered_lines[0]):
                             data_dict = elements.Person(buffered_lines).parser()
-                            print('person done {}'.format(buffered_lines[0]))
                             yield 'person', data_dict
                         else:
-                            print(buffered_lines)
-                            print("xxxxxxxxxxxxxxxxxxx")
                             log.debug('this non-breaking functionality is not implemented')
                 else:
                     raise RuntimeError('gedcom format not as expected, or buffering of reads is failing')
