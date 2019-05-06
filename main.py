@@ -4,6 +4,7 @@ import dbinterface as dbi
 import ingest
 import settings
 import embedding_person as tr
+from dbinterface import *
 
 import argparse
 
@@ -16,6 +17,7 @@ MONGO_PORT = 27017
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('main')
     parser.add_argument('-i', '--ingest', required=False, help="provide a fully qualified gedcom file")
+    parser.add_argument('-n', '--name', required=False, help="provide a family name that will prefix the collection")
     # parser.add_argument('-d', '--db', required=True, help="provide an output database name")
     parser.add_argument('--host', default="10.22.14.2", help="provide an ip address for db")
     parser.add_argument('-p', '--port', default=27017, help="provide integer port for db")
@@ -39,10 +41,17 @@ if __name__ == '__main__':
     # if args.coll not in src_conn.mc[args.db].collection_names():
     #     log.warning('collection {} does not exist in {}'.format(args.coll, args.db))
 
+    if not args.name:
+        raise ValueError('a family name is required')
+
     if args.ingest:
         log.info('ingesting data: processing {} and storing to {}'.format(args.ingest, settings.sink_db))
         ingestor = ingest.FileIngestor(args.ingest)
-        ingestor.ingest()
+        person_store = MongoDb(MongoConnector(), db=settings.sink_db, coll='{}_{}'.format(settings.sink_tbl['person'],
+                                                                                          args.name))
+        family_store = MongoDb(MongoConnector(), db=settings.sink_db, coll='{}_{}'.format(settings.sink_tbl['family'],
+                                                                                          args.name))
+        ingestor.ingest(person=person_store, family=family_store)
         log.info('REPORT: {}'.format(ingestor.meta_data))
     elif args.transformer:
         log.info('applying transformation pipelines')

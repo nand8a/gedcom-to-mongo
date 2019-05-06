@@ -1,7 +1,8 @@
 [run]
 branch = True
 include =
-        ./*
+        ./*.py
+	./*
 omit =
         *tests*
         *__init__*
