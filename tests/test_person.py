@@ -71,7 +71,7 @@ class TestPerson(unittest.TestCase):
 
     def test_person_name(self):
         self.person._i = 1
-        expect = {'name': 'Judith /du Plessis/', 'surn': 'du Plessis', 'givn': 'Judith'}
+        expect = {'name': 'Judith du Plessis', 'surn': 'du Plessis', 'givn': 'Judith'}
         local_dict = self.person._person_name()
         self.assertEqual(expect, local_dict)
 
@@ -87,7 +87,7 @@ class TestPerson(unittest.TestCase):
         # functional test
         parsed_output = {'_id': '@I3@',
                          'name': {
-                             'name': 'Judith /du Plessis/',
+                             'name': 'Judith du Plessis',
                              'surn': 'du Plessis',
                              'givn': 'Judith'},
                          'sex': 'F',
@@ -108,7 +108,7 @@ class TestPerson(unittest.TestCase):
 class TestPersonName(unittest.TestCase):
 
     def test_person_strip_key(self):
-        lines = ['1 NAME Anna /du Toit/']
+        lines = ['1 NAME Anna du Toit']
         obj = Person(lines)
         output = obj._person_name()
-        self.assertEqual({'name': 'Anna /du Toit/'}, output)
+        self.assertEqual({'name': 'Anna du Toit'}, output)

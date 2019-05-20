@@ -174,7 +174,7 @@ class Person(GedcomElement):
 
     def _person_name(self):
         log.debug('name before strip {}'.format(self.current()))
-        name = re.sub('^1 NAME ', '', self.current())
+        name = re.sub('/', '', re.sub('^1 NAME ', '', self.current()))  # there is an annoying / in the name too
         log.debug('NAME: {}'.format(name))
         local_dict = {'name': name}
         self.next()

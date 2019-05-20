@@ -43,18 +43,20 @@ if __name__ == '__main__':
 
     if not args.name:
         raise ValueError('a family name is required')
+    else:
+        log.debug('patching the settings')
+        settings.sink_tbl['person'] = '{}_{}'.format(settings.sink_tbl['person'], args.name)
+        settings.sink_tbl['family'] = '{}_{}'.format(settings.sink_tbl['family'], args.name)
 
     if args.ingest:
         log.info('ingesting data: processing {} and storing to {}'.format(args.ingest, settings.sink_db))
         ingestor = ingest.FileIngestor(args.ingest)
-        person_store = MongoDb(MongoConnector(), db=settings.sink_db, coll='{}_{}'.format(settings.sink_tbl['person'],
-                                                                                          args.name))
-        family_store = MongoDb(MongoConnector(), db=settings.sink_db, coll='{}_{}'.format(settings.sink_tbl['family'],
-                                                                                          args.name))
+        person_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
+        family_store = MongoDb(MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
         ingestor.ingest(person=person_store, family=family_store)
         log.info('REPORT: {}'.format(ingestor.meta_data))
     elif args.transformer:
-        log.info('applying transformation pipelines')
+        log.info('applying transformation pipelines on {}.{}'.format(settings.sink_db, settings.sink_tbl['person']))
         family_coll = dbi.MongoDb(dbi.MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['family'])
         person_coll = dbi.MongoDb(dbi.MongoConnector(), db=settings.sink_db, coll=settings.sink_tbl['person'])
         tr.processor(family_coll, person_coll)
