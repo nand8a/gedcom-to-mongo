@@ -47,11 +47,14 @@ function mongocmd() {
 	if ! [ -z "$PORT" ]; then
 		cmd="$cmd --port $PORT"
 	fi
-	cmd="$cmd < $1"
+	cmd="$cmd --eval $1"
 	eval "$cmd"
 }
 
+query_preamble="db = db.getSiblingDB(\"$DBNAME\"); db.getCollection(\"$COLLNAME\")"
+query="$query_preamble"'.find({"name.name": {$regex: "^Maria.*"}}, {"name.name": 1, "_id": 0}).forEach( function(elem) { print( elem.name.name ); } )'
 
-if ! diff <( cat "$GEDCOMFILE" | grep NAME | sed -e 's/1 NAME //'g | grep -E ^Maria | wc -l ) <( mongocmd namestartmaria.js | grep -E ^Maria | wc -l ); then 
+
+if ! diff <( cat "$GEDCOMFILE" | grep NAME | sed -e 's/1 NAME //'g | grep -E ^Maria | wc -l ) <( mongocmd "'$query'" | grep -E ^Maria | wc -l ); then 
 	echo "FAILURE of counting names starting with Maria"
 fi
