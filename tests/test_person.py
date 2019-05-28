@@ -74,6 +74,12 @@ class TestPerson(unittest.TestCase):
         expect = {'name': 'Judith du Plessis', 'surn': 'du Plessis', 'givn': 'Judith'}
         local_dict = self.person._person_name()
         self.assertEqual(expect, local_dict)
+        # now let's that newlines aren't present
+        expect = {'name': 'Judith du Plessis\n'}
+        local_person = Person(['1 NAME Judith /du Plessis/'])
+        local_dict = local_person._person_name()
+        self.assertFalse(local_dict['name'].endswith('\n'))
+
 
     def test_is_person(self):
 
