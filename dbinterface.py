@@ -160,7 +160,7 @@ class MongoDb(DataStore):
 
     def write(self, data_dict):
         """
-        write a dictionary to mongo, adding the _insert_time: attribute
+        write a dictionary to mongo, adding {_insert_time: now}
         :param data_dict:
         :return:
         """
