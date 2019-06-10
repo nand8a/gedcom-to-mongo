@@ -1,6 +1,7 @@
 import logging
 log = logging.getLogger(__name__)
 import pymongo
+from datetime import datetime
 from abc import ABC, abstractmethod
 # from typing import *
 
@@ -159,10 +160,11 @@ class MongoDb(DataStore):
 
     def write(self, data_dict):
         """
-        write a dictionary to mongo
+        write a dictionary to mongo, adding the _insert_time: attribute
         :param data_dict:
         :return:
         """
+        data_dict.update({'_insert_time': datetime.now()})
         self.coll.insert_one(data_dict)
 
     def write_processor(self, id, processor_name):
