@@ -6,6 +6,48 @@ from elements import Person
 from datetime import datetime
 
 
+class TestSour(unittest.TestCase):
+    """
+    explicit test for bug with SOUR tag
+    """
+
+    @classmethod
+    def setUpClass(cls):
+
+        cls.lines = ['0 @I158@ INDI',
+                     '1 NAME Elisabeth Blignaut',
+                     '2 SURN Blignaut',
+                     '2 GIVN Elisabeth',
+                     '1 SEX F',
+                     '1 BIRT',
+                     '2 DATE ABT 1756',
+                     '2 PLAC Paarl',
+                     '2 SOUR @S27@',
+                     '3 PAGE Hansie Brummer',
+                     '1 DEAT',
+                     '2 SOUR @S27@',
+                     '3 PAGE Hansie Brummer',
+                     '1 _UID 8754D1BB8A284FE580409AD7C1BA861D9C86',
+                     '0 @I4@ INDI']
+        cls.person = Person(cls.lines)
+
+        # todo move this test out to utils test
+
+    def test_person_sub(self):
+        # test that works correctly after the BIRT key where the line integer value in the
+        # file increases in the substructure
+        i = 6
+        local_dict, res_i = utils.ged_sub_structure(self.lines, i, self.lines[i].split(' ')[0])
+        self.assertEqual({'date': {'raw': 'ABT 1756', 'error': True},
+                          'plac': 'Paarl',
+                          'sour': '@S27@',
+                          'page': 'Hansie Brummer'}, local_dict)
+
+        i = 11
+        local_dict, res_i = utils.ged_sub_structure(self.lines, i, self.lines[i].split(' ')[0])
+        self.assertEqual({'sour': '@S27@', 'page': 'Hansie Brummer'}, local_dict)
+
+
 class TestPerson(unittest.TestCase):
 
     @classmethod
@@ -56,7 +98,7 @@ class TestPerson(unittest.TestCase):
                           'PLAC'.lower(): 'Ierland'}, local_dict)
         self.assertEqual(res_i, 8)
 
-    # todo fix this
+    # todo fix this - (ah, think it means move to utils tests)
     def test_person_sub_level_1(self):
         # assuming '1 KEY VALUE' returns as ({KEY: VALUE}, int), whilst '1 KEY' returns as ({KEY: None})
         i = 9
@@ -80,14 +122,12 @@ class TestPerson(unittest.TestCase):
         local_dict = local_person._person_name()
         self.assertFalse(local_dict['name'].endswith('\n'))
 
-
     def test_is_person(self):
 
         self.assertTrue(Person.is_person('0 @11111111@ INDI'))
         self.assertFalse(Person.is_person('@11@ INDI'))
         self.assertFalse(Person.is_person('0 @11@ IND'))
         self.assertFalse(Person.is_person(''))
-
 
     def test_parser(self):
         # functional test
@@ -108,7 +148,6 @@ class TestPerson(unittest.TestCase):
 
         self.person._i = 0
         self.assertEqual(self.person.parser(), parsed_output)
-
 
 
 class TestPersonName(unittest.TestCase):

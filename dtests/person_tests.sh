@@ -14,6 +14,14 @@ if ! diff <( cat "$GEDCOMFILE" | grep -E '^0 .*[0-9]+. INDI' | wc -l ) <( mongoc
 	echo "FAILURE of indi counts"
 fi
 
+
+query=""
+if ! diff <( cat "$GEDCOMFILE" | grep -A 2 '1 BIRT' | grep '2 DATE' | wc -l ) <( mongocmd "'$query'" | tail -n -1 ); then
+	echo "FAILURE of birth date counts"
+fi
+
+
+
 #TODO this test should really test the embedded database - but actually - all of this should move to python auditor
 #query="$query_preamble"'.count()'
 #if ! diff <( cat "$GEDCOMFILE" | grep -E '^0 .*[0-9]+. FAM' | wc -l ) <( mongocmd "'$query'" | tail -n -1 ); then

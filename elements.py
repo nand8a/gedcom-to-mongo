@@ -191,6 +191,7 @@ class Person(GedcomElement):
         """
         # counter = 0
         while self.has_next():
+            log.debug('person has next {}'.format(self.current()))
             if 'INDI' in self.current():
                 identifier = self.current().split(' ')[1]
                 log.debug('INDI: {}'.format(identifier))
@@ -203,12 +204,15 @@ class Person(GedcomElement):
                 # todo: get rid of this awful index scheme
             elif self.current().startswith('1') and \
                     '1 CHAN' not in self.current():  # add exclusion for NAME here in case of i error
+                log.debug('1 substructure without 1 CHAN')
                 local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
                 self._parsed_dict.update(local_dict)
                 key = list(local_dict.keys())[0]
+                log.debug('traversing first ged_substructure')
                 while self.current() and (self.current().split(' ')[0] != '1'):
                     local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
                     self._parsed_dict[key] = local_dict
+                log.debug(local_dict)
             elif '1 CHAN' in self.current():
                 ret_dict = self._parse_chan()
                 self._parsed_dict.update(ret_dict)
