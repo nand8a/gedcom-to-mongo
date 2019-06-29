@@ -67,11 +67,12 @@ def ged_sub_structure(lines, current_i, current_level):
                 pass
             i += 1
             return {key: value}, i
-        if level != current_level:
+        if level < current_level:
+            log.debug('level {} != current_level {}'.format(level, current_level))
             break
         level_dict[key] = ' '.join(split_lines[2:])
-        print(key.lower() == 'date')
         if key.lower() == 'date':
+            log.debug('key == date, updating "date" : {}'.format(level_dict[key]))
             level_dict.update(get_date_dictionary(key, level_dict[key]))
         i += 1
     return level_dict, i

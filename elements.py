@@ -114,6 +114,26 @@ class Person(GedcomElement):
         else:
             return False
 
+    def _parse_birt(self):
+        """
+        create the birth structure --- we are assuming that person can only have
+        one birth
+        :return:
+        """
+        if '1 birt' not in self.current().lower():
+            raise ValueError('parse error: expected "1 birt", got "{}"'.format(self._lines[self._i].lower()))
+        self.next()
+        if 'birt' in self._parsed_dict:
+            log.warning('birth {} already recorded to {}'.format(self._parsed_dict['birt'],
+                                                                 self._parsed_dict['_id']))
+            return {}
+        while self.current() and (self.current().split(' ')[0] != '1'):
+            local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
+            return {'birt': local_dict}
+
+
+
+
     def _parse_chan(self):
         """
         Deal with special case where integer counter follows [1,2,3] sequence
@@ -126,7 +146,7 @@ class Person(GedcomElement):
         {'raw': <raw string date>: 'error': <parse error>}
         """
         if '1 chan' not in self.current().lower():
-            Exception('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
+            raise ValueError('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
         self.next()
         key = 'chan_date'
         log.debug(' lines ---- chan ---- {}'.format(self._lines))
@@ -191,6 +211,7 @@ class Person(GedcomElement):
         """
         # counter = 0
         while self.has_next():
+            log.debug('person has next {}'.format(self.current()))
             if 'INDI' in self.current():
                 identifier = self.current().split(' ')[1]
                 log.debug('INDI: {}'.format(identifier))
@@ -200,18 +221,25 @@ class Person(GedcomElement):
                 self._parsed_dict['name'] = self._person_name()
             elif '1 NOTE ' in self.current():  # todo: not DRY - duplicating string check
                 self._parsed_dict['note'] = self._person_note()
-                # todo: get rid of this awful index scheme
-            elif self.current().startswith('1') and \
-                    '1 CHAN' not in self.current():  # add exclusion for NAME here in case of i error
-                local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
-                self._parsed_dict.update(local_dict)
-                key = list(local_dict.keys())[0]
-                while self.current() and (self.current().split(' ')[0] != '1'):
-                    local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
-                    self._parsed_dict[key] = local_dict
             elif '1 CHAN' in self.current():
                 ret_dict = self._parse_chan()
                 self._parsed_dict.update(ret_dict)
+            elif '1 BIRT' in self.current():
+                ret_dict = self._parse_birt()
+                self._parsed_dict.update(ret_dict)
+            elif self.current().startswith('1'):
+                log.debug('1 substructure without 1 CHAN')
+                local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
+                self._parsed_dict.update(local_dict)
+                key = list(local_dict.keys())[0]
+                log.debug('traversing first ged_substructure')
+                while self.current() and (self.current().split(' ')[0] != '1'):
+                    local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
+                    if key in self._parsed_dict:
+                        log.warning('the key {} is already in dict for {}'.format(key, identifier))
+                        break
+                    self._parsed_dict[key] = local_dict
+                log.debug(local_dict)
         log.debug(pp.pprint(self._parsed_dict))
         return self._parsed_dict
 

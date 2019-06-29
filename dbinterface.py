@@ -3,7 +3,6 @@ log = logging.getLogger(__name__)
 import pymongo
 from datetime import datetime
 from abc import ABC, abstractmethod
-# from typing import *
 
 
 class DataConnector(ABC):  # pragma: no cover
@@ -12,10 +11,10 @@ class DataConnector(ABC):  # pragma: no cover
 
     def __new__(cls, *args, **kwargs):  # pragma: no cover
         if DataConnector.__instance is None:
-            print('creating a new object')
+            log.debug('creating a new object')
             DataConnector.__instance = object.__new__(cls)
         else:
-            print ('it is not none, it is {}'.format(DataConnector.__instance))
+            log.debug('it is not none, it is {}'.format(DataConnector.__instance))
         return DataConnector.__instance
 
     @classmethod
