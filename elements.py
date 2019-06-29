@@ -121,7 +121,7 @@ class Person(GedcomElement):
         :return:
         """
         if '1 birt' not in self.current().lower():
-            Exception('parse error: expected "1 birt", got "{}"'.format(self._lines[self._i].lower()))
+            raise ValueError('parse error: expected "1 birt", got "{}"'.format(self._lines[self._i].lower()))
         self.next()
         if 'birt' in self._parsed_dict:
             log.warning('birth {} already recorded to {}'.format(self._parsed_dict['birt'],

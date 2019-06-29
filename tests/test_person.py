@@ -51,7 +51,23 @@ class TestBirt(unittest.TestCase):
         self.person._i = 5
         self.assertEqual(self.person._parse_birt(), {'birt': self.birt_contents})
 
+    def test_person_failure(self):
+        self.person._i = 6
+        with self.assertRaises(ValueError) as context:
+            self.person._parse_birt()
 
+    def test_person_birth_exists(self):
+        self.person._i = 5
+        self.person._parsed_dict = {'_id': 'billybob', 'birt': self.birt_contents}
+        self.assertEqual(self.person._parse_birt(), {})
+
+        # make sure that the parser also doesn't do weird stuff here
+        # insert another birth
+        double_birth = self.lines[0:-1] + ['1 BIRT'] + self.lines[-1:]
+        self.assertTrue(double_birth.count('1 BIRT') == 2)  # a check for the list logic
+        double_person = Person(double_birth)
+        parsed = double_person.parser()
+        self.assertEqual(parsed['birt'], self.birt_contents)
 
 class TestPerson(unittest.TestCase):
 

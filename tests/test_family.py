@@ -20,8 +20,6 @@ class TestFamily(unittest.TestCase):
         ]
 
     def test_family(self):
-        print('test_family')
-        print(self.lines)
         obj = elements.Family(self.lines)
         local_dict = obj.parser()
         self.assertEqual({"_id": "{}".format(self.fam_id),
