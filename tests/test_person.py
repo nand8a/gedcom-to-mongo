@@ -3,10 +3,9 @@ from datetime import datetime
 
 import utils
 from elements import Person
-from datetime import datetime
 
 
-class TestSour(unittest.TestCase):
+class TestBirt(unittest.TestCase):
     """
     explicit test for bug with SOUR tag
     """
@@ -30,6 +29,10 @@ class TestSour(unittest.TestCase):
                      '1 _UID 8754D1BB8A284FE580409AD7C1BA861D9C86',
                      '0 @I4@ INDI']
         cls.person = Person(cls.lines)
+        cls.birt_contents = {'date': {'raw': 'ABT 1756', 'error': True},
+                             'plac': 'Paarl',
+                             'sour': '@S27@',
+                             'page': 'Hansie Brummer'}
 
         # todo move this test out to utils test
 
@@ -38,14 +41,16 @@ class TestSour(unittest.TestCase):
         # file increases in the substructure
         i = 6
         local_dict, res_i = utils.ged_sub_structure(self.lines, i, self.lines[i].split(' ')[0])
-        self.assertEqual({'date': {'raw': 'ABT 1756', 'error': True},
-                          'plac': 'Paarl',
-                          'sour': '@S27@',
-                          'page': 'Hansie Brummer'}, local_dict)
+        self.assertEqual(self.birt_contents, local_dict)
 
         i = 11
         local_dict, res_i = utils.ged_sub_structure(self.lines, i, self.lines[i].split(' ')[0])
         self.assertEqual({'sour': '@S27@', 'page': 'Hansie Brummer'}, local_dict)
+
+    def test_person_birt(self):
+        self.person._i = 5
+        self.assertEqual(self.person._parse_birt(), {'birt': self.birt_contents})
+
 
 
 class TestPerson(unittest.TestCase):
