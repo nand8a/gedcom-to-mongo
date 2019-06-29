@@ -3,7 +3,8 @@ import argparse
 import re
 
 
-def get_indi(filename):
+# move to unittest like setup
+def get_indi(filename):  # pragma: no cover
     indi_list = []
     with open(filename, 'r', encoding='utf-8-sig') as f:
         for line in f:
@@ -16,7 +17,7 @@ def get_indi(filename):
     return indi_list
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     parser = argparse.ArgumentParser('test')
     parser.add_argument('-f', '--file', required=True, help="gedcom file")
 

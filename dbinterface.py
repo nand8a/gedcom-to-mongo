@@ -3,7 +3,6 @@ log = logging.getLogger(__name__)
 import pymongo
 from datetime import datetime
 from abc import ABC, abstractmethod
-# from typing import *
 
 
 class DataConnector(ABC):  # pragma: no cover
