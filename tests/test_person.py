@@ -103,12 +103,18 @@ class TestPerson(unittest.TestCase):
         ret_string = self.person._person_note()
         self.assertEqual(ret_string, '{} {}'.format(self.conc_1, self.conc_2))
 
+    # todo move this to it's own test case
     def test_person_chan(self):
         self.person._i = 13
         local_dict = self.person._parse_chan()
         self.assertEqual({'chan_date':
                           datetime.strptime('13 Sep 2016 20:14:25', '%d %b %Y %H:%M:%S')
                           }, local_dict)
+
+    def test_person_chan_failure(self):
+        self.person._i = 14
+        with self.assertRaises(ValueError) as context:
+            self.person._parse_chan()
 
     # todo move this test out to utils test
     def test_person_sub(self):

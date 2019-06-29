@@ -146,7 +146,7 @@ class Person(GedcomElement):
         {'raw': <raw string date>: 'error': <parse error>}
         """
         if '1 chan' not in self.current().lower():
-            Exception('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
+            raise ValueError('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
         self.next()
         key = 'chan_date'
         log.debug(' lines ---- chan ---- {}'.format(self._lines))
