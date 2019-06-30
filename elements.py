@@ -133,7 +133,7 @@ class Person(GedcomElement):
 
 
 
-
+    # the logic in this function stinks
     def _parse_chan(self):
         """
         Deal with special case where integer counter follows [1,2,3] sequence
@@ -145,28 +145,33 @@ class Person(GedcomElement):
         :return: on success {chan_date: <datetime>}, on error
         {'raw': <raw string date>: 'error': <parse error>}
         """
+        time = None
+        date = None
         if '1 chan' not in self.current().lower():
-            Exception('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
-        self.next()
+            raise ValueError('parse error: expected "1 chan", got "{}"'.format(self._lines[self._i].lower()))
         key = 'chan_date'
-        log.debug(' lines ---- chan ---- {}'.format(self._lines))
-        if '2 DATE'.lower() not in self.current().lower():
-            log.debug('warning: expected a date first... pluggin')
-            date = ''
-        else:
-            date = self.current().lstrip('2 DATE ').replace('\n', '')
-        self.next()
-        if '3 time' not in self.current().lower():
-            log.debug('warning: expected a time, but none')
-            time = ''
-        else:
-            # todo this lstrip chap is dangerous
-            time = self.current().lstrip('3 TIME ').replace('\n', '')
-        # todo there is surely a bug here
-        self.next()
-        ret = utils.get_date_dictionary(key, "{} {}".format(date, time))
-        if ret:
-            return ret
+        while self.next(): # implicitly advances to next position after date and time have been processed
+            hit = False
+            if '2 DATE'.lower() in self.current().lower():
+                hit = True
+                log.debug('got a date {}'.format(self.current().lower()))
+                date = self.current().lstrip('2 DATE ').replace('\n', '')
+            # alternatively it could the time
+            if '3 time' in self.current().lower():
+                # todo this lstrip chap is dangerous
+                hit = True
+                log.debug('got a time {}'.format(self.current().lower()))
+                time = self.current().lstrip('3 TIME ').replace('\n', '')
+            if not hit:
+                log.debug('chan occurred alone, with no date')
+                break
+        # todo - clean this up, possibly have get_date_dictionary sanitize
+        if time and date:
+            return utils.get_date_dictionary(key, "{} {}".format(date, time))
+        elif date:
+            return utils.get_date_dictionary(key, "{}".format(date))
+        elif time:
+            return utils.get_date_dictionary(key, "{}".format(time))
         else:
             log.error('could not parse date: {} time: {}'.format(date, time))
             return {}
@@ -239,7 +244,7 @@ class Person(GedcomElement):
                         log.warning('the key {} is already in dict for {}'.format(key, identifier))
                         break
                     self._parsed_dict[key] = local_dict
-                log.debug(local_dict)
-        log.debug(pp.pprint(self._parsed_dict))
+                #log.debug(local_dict)
+        #log.debug(pp.pprint(self._parsed_dict))
         return self._parsed_dict
 

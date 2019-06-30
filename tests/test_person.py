@@ -5,6 +5,51 @@ import utils
 from elements import Person
 
 
+class TestChanDate(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.lines = ['0 @I3@ INDI',
+                     '1 CHAN',
+                     '2 DATE 13 Sep 2016',
+                     '3 TIME 20:14:25',
+                     '1 NOTE {}'.format(':D'),
+                     '0 @I4@ INDI']
+        cls.individual = Person(cls.lines)
+
+
+    # todo move this to it's own test case
+    def test_individual_chan(self):
+        self.individual._i = 1
+        local_dict = self.individual._parse_chan()
+        self.assertEqual({'chan_date':
+                          datetime.strptime('13 Sep 2016 20:14:25', '%d %b %Y %H:%M:%S')
+                          }, local_dict)
+
+    def test_individual_chan_failure(self):
+        self.individual._i = 2
+        with self.assertRaises(ValueError) as context:
+            self.individual._parse_chan()
+
+    # the calls to date are functional - change to isolate # todo
+    def test_chan_date(self):
+        # todo fix these tests and isolate them as far as possible from an annoying global structure
+        # test first next() conditional
+        local_individual = Person(['1 CHAN'])
+        self.assertEqual({}, local_individual._parse_chan())
+        # test second next() conditional
+        local_individual = Person(['1 CHAN', '0 @I4@ INDI'])
+        self.assertEqual({}, local_individual._parse_chan())
+        # test '3 time' conditional
+        local_individual = Person(['1 CHAN', '2 DATE 13 Sep 2016', '0 @I4@ INDI'])
+        self.assertEqual({'chan_date' : datetime(2016, 9, 13, 0, 0)}, local_individual._parse_chan())
+        # test time only
+        # test '3 time' conditional
+        local_individual = Person(['1 CHAN', '3 TIME 20:14:25', '0 @I4@ INDI'])
+        self.assertEqual({'chan_date': {'error': True, 'raw': '20:14:25'}}, local_individual._parse_chan())
+
+
+
 class TestBirt(unittest.TestCase):
     """
     explicit test for bug with SOUR tag
@@ -102,13 +147,6 @@ class TestPerson(unittest.TestCase):
         self.person._i = 16
         ret_string = self.person._person_note()
         self.assertEqual(ret_string, '{} {}'.format(self.conc_1, self.conc_2))
-
-    def test_person_chan(self):
-        self.person._i = 13
-        local_dict = self.person._parse_chan()
-        self.assertEqual({'chan_date':
-                          datetime.strptime('13 Sep 2016 20:14:25', '%d %b %Y %H:%M:%S')
-                          }, local_dict)
 
     # todo move this test out to utils test
     def test_person_sub(self):
