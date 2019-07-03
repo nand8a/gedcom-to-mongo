@@ -5,6 +5,38 @@ import utils
 from elements import Person
 
 
+
+class TestFam(unittest.TestCase):
+
+
+    def test_no_fam(self):
+        with self.assertRaises(ValueError):
+            obj = Person(['1 CHR'])
+            obj._parse_fam()
+
+    def test_fams_only(self):
+        obj = Person(['1 FAMS FamilyHere'])
+        self.assertEqual(obj._parse_fam(), {'fams': {'FamilyHere'}})
+
+    def test_famc_only(self):
+        obj = Person(['1 FAMC FamilyHere'])
+        self.assertEqual(obj._parse_fam(), {'famc': {'FamilyHere'}})
+
+
+    def test_already_populated(self):
+        with self.assertRaises(KeyError):
+            obj = Person(['1 FAMC FamilyHere'])
+            obj._parsed_dict = {'famc': None}
+            obj._parse_fam()
+
+
+    # self.individual._i = 1
+        # local_dict = self.individual._parse_chan()
+        # self.assertEqual({'chan_date':
+        #                   datetime.strptime('13 Sep 2016 20:14:25', '%d %b %Y %H:%M:%S')
+        #                   }, local_dict)
+
+
 class TestChanDate(unittest.TestCase):
 
     @classmethod
@@ -199,7 +231,7 @@ class TestPerson(unittest.TestCase):
                          'birt': {
                                 'date': datetime(1693, 1, 1, 0, 0), 'plac': 'Ierland'},
                          '_uid': '5CB8557F5530F54C8A3A0FB66935E5E09AA6',
-                         'fams': '@F6@',
+                         'fams': {'@F6@', '@F5@', '@F4@'},
                          'famc': '@F7@',
                          'chan_date': datetime(2016, 9, 13, 20, 14, 25),
                          'note': 'There is plenty of commentary here and more here.....'

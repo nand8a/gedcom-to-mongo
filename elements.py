@@ -114,6 +114,32 @@ class Person(GedcomElement):
         else:
             return False
 
+    def _parse_fam(self):
+        """
+        parse family lines like
+           '1 FAMS @F5@',
+           '1 FAMS @F4@',
+           '1 FAMS @F6@',
+           '1 FAMC @F7@',
+        :return: the finalised dict
+        """
+        # todo remove the raise and simply do nothing when called erroneously - then we can remove the if mess in parser()
+        if '1 fam' not in self.current().lower():
+            raise ValueError('parse error: expected 1 fam[S,C], bug got "{}"'.format(self.current()))
+        if 'famc' in self.current().lower():
+            key = 'famc'
+        else:
+            key = 'fams'
+        local_dict = dict()
+        if key in self._parsed_dict:  # todo this is inconsistent now with the parser method below - see 'not None' - smell smell
+            raise KeyError('{} is already finalised in the dictionary'.format(key))
+        else:
+            local_dict[key] = {self.current().split(' ')[2]}
+            while self.next() and key in self.current().lower():
+                local_dict[key].add(self.current().split(' ')[2])
+        return local_dict
+
+
     def _parse_birt(self):
         """
         create the birth structure --- we are assuming that person can only have
@@ -121,7 +147,7 @@ class Person(GedcomElement):
         :return:
         """
         if '1 birt' not in self.current().lower():
-            raise ValueError('parse error: expected "1 birt", got "{}"'.format(self._lines[self._i].lower()))
+            raise ValueError('parse error: expected "1 birt", got "{}"'.format(self.current()))
         self.next()
         if 'birt' in self._parsed_dict:
             log.warning('birth {} already recorded to {}'.format(self._parsed_dict['birt'],
@@ -215,8 +241,15 @@ class Person(GedcomElement):
         construct a dictionary in the necessary format
         """
         # counter = 0
+        identifier = None
         while self.has_next():
             log.debug('person has next {}'.format(self.current()))
+            log.debug('-- {}'.format(self._parsed_dict))
+
+            try:
+                log.debug('-|- {}'.format(self._parsed_dict['chr']))
+            except Exception:
+                pass
             if 'INDI' in self.current():
                 identifier = self.current().split(' ')[1]
                 log.debug('INDI: {}'.format(identifier))
@@ -232,19 +265,27 @@ class Person(GedcomElement):
             elif '1 BIRT' in self.current():
                 ret_dict = self._parse_birt()
                 self._parsed_dict.update(ret_dict)
+            elif '1 FAMS' in self.current():
+                self._parsed_dict.update(self._parse_fam())
             elif self.current().startswith('1'):
-                log.debug('1 substructure without 1 CHAN')
+                # a {'key': null} is returned in the event that this is an unknown structure, this is a catchall
                 local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
-                self._parsed_dict.update(local_dict)
                 key = list(local_dict.keys())[0]
-                log.debug('traversing first ged_substructure')
-                while self.current() and (self.current().split(' ')[0] != '1'):
-                    local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
-                    if key in self._parsed_dict:
-                        log.warning('the key {} is already in dict for {}'.format(key, identifier))
-                        break
-                    self._parsed_dict[key] = local_dict
-                #log.debug(local_dict)
+                if key in self._parsed_dict and self._parsed_dict[key] is not None:
+                    log.warning('the key {} is already in dict for {}'.format(key, identifier))
+                    # run all the way to the next 1
+                    while self.current() and (self.current().split(' ')[0] != '1'):
+                        self.next()
+                else:
+                    self._parsed_dict.update(local_dict)
+                    log.debug('traversing first ged_substructure')
+                    while self.current() and (self.current().split(' ')[0] != '1'):
+                        local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
+                        log.debug('--- this should not be: {}:{}'.format(key, self._parsed_dict[key]))
+                        log.debug('--- T/F: {}'.format(key in self._parsed_dict and self._parsed_dict[key] is not None))
+                        log.debug('--- {}'.format(self._parsed_dict))
+                        self._parsed_dict[key] = local_dict
+            log.debug('-------- {}'.format(self._parsed_dict))
         #log.debug(pp.pprint(self._parsed_dict))
         return self._parsed_dict
 
