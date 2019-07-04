@@ -16,11 +16,15 @@ class TestFam(unittest.TestCase):
 
     def test_fams_only(self):
         obj = Person(['1 FAMS FamilyHere'])
-        self.assertEqual(obj._parse_fam(), {'fams': {'FamilyHere'}})
+        self.assertEqual(obj._parse_fam(), {'fams': ['FamilyHere']})
 
     def test_famc_only(self):
         obj = Person(['1 FAMC FamilyHere'])
-        self.assertEqual(obj._parse_fam(), {'famc': {'FamilyHere'}})
+        self.assertEqual(obj._parse_fam(), {'famc': ['FamilyHere']})
+
+    def test_fas_many(self):
+        obj = Person(['1 FAMC @F2@', '1 FAMC @F1@'])
+        self.assertEqual(obj._parse_fam(), {'famc': ['@F1@', '@F2@']})
 
 
     def test_already_populated(self):
@@ -231,7 +235,7 @@ class TestPerson(unittest.TestCase):
                          'birt': {
                                 'date': datetime(1693, 1, 1, 0, 0), 'plac': 'Ierland'},
                          '_uid': '5CB8557F5530F54C8A3A0FB66935E5E09AA6',
-                         'fams': {'@F6@', '@F5@', '@F4@'},
+                         'fams':['@F4@', '@F5@', '@F6@'],
                          'famc': '@F7@',
                          'chan_date': datetime(2016, 9, 13, 20, 14, 25),
                          'note': 'There is plenty of commentary here and more here.....'

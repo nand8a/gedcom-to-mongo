@@ -134,9 +134,10 @@ class Person(GedcomElement):
         if key in self._parsed_dict:  # todo this is inconsistent now with the parser method below - see 'not None' - smell smell
             raise KeyError('{} is already finalised in the dictionary'.format(key))
         else:
-            local_dict[key] = {self.current().split(' ')[2]}
+            local_dict[key] = [self.current().split(' ')[2]]
             while self.next() and key in self.current().lower():
-                local_dict[key].add(self.current().split(' ')[2])
+                local_dict[key].append(self.current().split(' ')[2])
+                local_dict[key].sort()
         return local_dict
 
 
