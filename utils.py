@@ -28,12 +28,6 @@ def get_date(date: str):
     :param date: a date string
     :return: a datetime object
     """
-    # deal with exception where it is a year only
-    try:
-        if len(date) == 4 and int(date) > 1000:
-            log.debug("suspected YYYY only date: {}".format(date))
-    except ValueError as e:
-        pass
     for fmt in valid_formats:
         try:
             return datetime.datetime.strptime(date, fmt)
@@ -59,7 +53,7 @@ def ged_sub_structure(lines, current_i, current_level):
         split_lines = lines[i].rstrip('\n').split(' ')
         level, key = split_lines[0], split_lines[1].lower()
         if current_level == '1':
-            # special case, return either root {key: None} or {key: value}
+            # special case, return either root {key: None} or {key: value}  - this forces the insert
             value = None
             try:
                 value = split_lines[2]
@@ -75,4 +69,5 @@ def ged_sub_structure(lines, current_i, current_level):
             log.debug('key == date, updating "date" : {}'.format(level_dict[key]))
             level_dict.update(get_date_dictionary(key, level_dict[key]))
         i += 1
+    log.debug(level_dict)
     return level_dict, i
