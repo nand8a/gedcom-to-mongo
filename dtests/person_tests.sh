@@ -15,6 +15,11 @@ if ! diff <( cat "$GEDCOMFILE" | grep -E '^0 .*[0-9]+. INDI' | wc -l ) <( mongoc
 fi
 
 query="$query_preamble"'.count({"birt.date": {$exists:true}}, {"_id":1})'
-if ! diff <( python src_birth_date_count.py -b -f "$GEDCOMFILE" | wc -l) <( mongocmd "'$query'" | tail -n  -1); then
+if ! diff <( python src_counts.py -b -f "$GEDCOMFILE" | wc -l) <( mongocmd "'$query'" | tail -n  -1); then
 	echo "FAILURE of birth date counts"
+fi
+
+query="$query_preamble"'.count({"deat.date": {$exists:true}}, {"_id":1})'
+if ! diff <( python src_counts.py -d -f "$GEDCOMFILE" | wc -l) <( mongocmd "'$query'" | tail -n  -1); then
+	echo "FAILURE of death date counts"
 fi

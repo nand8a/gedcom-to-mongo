@@ -57,4 +57,4 @@ if __name__ == '__main__':  # pragma: no cover
         print('{}'.format('\n'.join(get_birth_date(args.file))))
 
     if args.death:
-        print('{}'.format('\n'.join(get_birth_date(args.file))))
+        print('{}'.format('\n'.join(get_death_date(args.file))))
