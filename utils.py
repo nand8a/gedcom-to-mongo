@@ -28,12 +28,6 @@ def get_date(date: str):
     :param date: a date string
     :return: a datetime object
     """
-    # deal with exception where it is a year only
-    try:
-        if len(date) == 4 and int(date) > 1000:
-            log.debug("suspected YYYY only date: {}".format(date))
-    except ValueError as e:
-        pass
     for fmt in valid_formats:
         try:
             return datetime.datetime.strptime(date, fmt)
