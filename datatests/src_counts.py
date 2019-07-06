@@ -63,7 +63,6 @@ def get_death(fh, sub_key=None, counting_obj=0):
                         counting_obj = _count(counting_obj, indi)
                         break
                     line = fh.readline()
-                    print(line)
     return counting_obj
 
 
@@ -73,8 +72,9 @@ if __name__ == '__main__':  # pragma: no cover
                                                  'to some constraint')
     parser.add_argument('-f', '--file', required=True, help="gedcom file")
     parser.add_argument('-b', '--birth', action='store_true', help='a toggle to print a list of people with birth dates')
-    parser.add_argument('-d', '--death', default="", help='provide a subkey (e.g. DEAT, PLAC)of the death event that you '
-                                                          'want to count,, or use "" to count deaths only')
+    parser.add_argument('-d', '--death', nargs='?', const='death_only', default=None,
+                        help='provide a subkey (e.g. DEAT, PLAC)of the death event that you'
+                             'want to count,, or use "" to count deaths only')
     parser.add_argument('-l', '--list', action='store_true', help='list the individual keys (useful for debugging)')
 
     args = parser.parse_args()
@@ -92,7 +92,13 @@ if __name__ == '__main__':  # pragma: no cover
 
     fh = _get_file_handler(args.file)
     if args.death:
-        print('{}'.format('\n'.join(get_death(fh, sub_key=args.death, counting_obj=counting_obj))))
-        print('{}'.format('\n'.join(get_death(fh, sub_key=args.death, counting_obj=counting_obj))))
+        if args.death == 'death_only':
+            args.death = None  # necessary to organise arguments correctly - count only deaths now
+        ans = get_death(fh, sub_key=args.death, counting_obj=counting_obj)
+        if args.list:
+            print('{}'.format('\n'.join(ans)))
+        else:
+            print('{}'.format(ans))
+
     fh.close()
 
