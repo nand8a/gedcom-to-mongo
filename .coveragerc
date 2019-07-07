@@ -1,11 +1,15 @@
 [run]
 branch = True
+source = .
 include =
         ./*.py
 	./*
+        ./datatests/src_counts.py
 omit =
         *tests*
-        *__init__*
+	./main.py
+	./build.py
+	./app_logger.py
 [report]
 exclude_lines = 
         pragma: no cover
