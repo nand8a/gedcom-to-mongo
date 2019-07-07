@@ -140,6 +140,15 @@ class Person(GedcomElement):
                 local_dict[key].sort()
         return local_dict
 
+    def _level_eater(self):
+        """
+        assumption is that we have already advanced off a '1 birt', for example, onto the next line,
+        so this function will cycle until it hits a 0 or 1 again, to eat up the repeat.
+        :return:
+        """
+        while not (self.current().startswith('1') or (self.current().startswith('0'))):
+            log.debug('eating error on {}'.format(self.current()))
+            self.next()
 
     def _parse_birt(self):
         """
@@ -149,11 +158,13 @@ class Person(GedcomElement):
         """
         if '1 birt' not in self.current().lower():
             raise ValueError('parse error: expected "1 birt", got "{}"'.format(self.current()))
-        self.next()
         if 'birt' in self._parsed_dict:
             log.warning('birth {} already recorded to {}'.format(self._parsed_dict['birt'],
                                                                  self._parsed_dict['_id']))
+            self.next()
+            self._level_eater()
             return {}
+        self.next()
         while self.current() and (self.current().split(' ')[0] != '1'):
             local_dict, self._i = utils.ged_sub_structure(self._lines, self._i, self.current().split(' ')[0])
             return {'birt': local_dict}
