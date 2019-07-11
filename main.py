@@ -1,4 +1,4 @@
-import logging
+import datatests.src_counts   # coverage.py not playing nice so adding here to include - #todo fix properly
 import app_logger
 import dbinterface as dbi
 import ingest
@@ -10,7 +10,7 @@ import argparse
 
 log = app_logger.init(log_level=logging.INFO)
 
-DATA_FOLDER='/home/jacques/industria/nand/nand-gedcom-to-mongo/data'
+DATA_FOLDER = '/home/jacques/industria/nand/nand-gedcom-to-mongo/data'
 MONGO_PORT = 27017
 
 
